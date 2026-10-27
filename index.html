@@ -1,0 +1,598 @@
+<!doctype html>
+<html lang="fr-CA">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Course de 30 foulées</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+/* Mise en page : cour d'école ensoleillée — fond ciel, grandes cartes blanches arrondies, piste aux couloirs de couleurs. Le test se fait sur un écran bleu nuit pour que la lumière ressorte. */
+:root {
+  --sky: #e6f3ff;
+  --card: #ffffff;
+  --ink: #1f2a48;
+  --soft: #66708a;
+  --line: #dfe7f3;
+  --sun: #ffc928;
+  --pink: #ff5c8a;
+  --blue: #3d7cff;
+  --green: #22b573;
+  --orange: #ff8a3d;
+  --purple: #8b5cf6;
+  --teal: #12b5c4;
+  --night: #1b2150;
+  --fun: "Fredoka", "Trebuchet MS", "Arial Rounded MT Bold", sans-serif;
+  --body: "Nunito", "Segoe UI", Arial, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--sky); color: var(--ink); font-family: var(--body); font-size: 17px; line-height: 1.45;
+  padding-top: max(18px, env(safe-area-inset-top, 0px)); padding-bottom: 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+main { max-width: 1100px; margin: 0 auto; display: grid; gap: 20px; }
+p { margin: 0; }
+h1, h2 { font-family: var(--fun); font-weight: 700; margin: 0; line-height: 1.05; text-wrap: balance; }
+h1 { font-size: clamp(2.2rem, 7vw, 3.6rem); }
+h2 { font-size: 1.7rem; }
+.card { background: var(--card); border-radius: 26px; padding: 22px; display: grid; gap: 16px; min-width: 0; box-shadow: 0 6px 0 #cfe2f6; }
+.soft { color: var(--soft); }
+.rainbow { display: flex; gap: 6px; }
+.rainbow i { width: 34px; height: 8px; border-radius: 4px; }
+button { font: inherit; font-family: var(--fun); font-weight: 600; font-size: 1.05rem; border-radius: 999px; border: 0; padding: 12px 22px; cursor: pointer; background: var(--line); color: var(--ink); }
+button:focus-visible, input:focus-visible { outline: 4px solid var(--sun); outline-offset: 2px; }
+.btn-go { background: var(--pink); color: #fff; box-shadow: 0 4px 0 #d63c6b; }
+.btn-go:active { transform: translateY(2px); box-shadow: 0 2px 0 #d63c6b; }
+.btn-blue { background: var(--blue); color: #fff; box-shadow: 0 4px 0 #2a5bd0; }
+.link { background: none; padding: 4px 2px; font-family: var(--body); font-weight: 700; font-size: .92rem; color: var(--soft); text-decoration: underline; text-underline-offset: 3px; border-radius: 6px; }
+.field { display: flex; flex-wrap: wrap; gap: 10px; }
+.field input { flex: 1 1 210px; min-width: 0; font: inherit; font-size: 1.15rem; font-weight: 700; padding: 13px 20px; border-radius: 999px; border: 3px solid var(--line); background: #fff; color: var(--ink); }
+.field input::placeholder { color: #9aa3b8; font-weight: 500; }
+
+/* En-tête du tableau */
+.head { display: grid; grid-template-columns: 1fr auto; gap: 20px; align-items: center; }
+.code-pill { display: inline-block; font-family: var(--fun); font-weight: 700; font-size: 2.2rem; line-height: 1; background: var(--sun); padding: 10px 22px; border-radius: 18px; }
+.join { font-weight: 700; color: var(--soft); overflow-wrap: anywhere; }
+.qr { background: #fff; padding: 10px; border-radius: 18px; border: 4px solid var(--blue); width: 188px; height: 188px; }
+.qr img, .qr canvas { width: 160px !important; height: 160px !important; display: block; }
+.here { display: grid; place-items: center; text-align: center; gap: 8px; width: 188px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { color: #fff; font-weight: 800; border-radius: 999px; padding: 4px 14px; font-size: .95rem; }
+.count { font-family: var(--fun); font-weight: 700; font-size: 1.3rem; }
+.err { color: var(--pink); font-weight: 800; }
+@media (max-width: 640px) { .head { grid-template-columns: 1fr; } }
+
+/* Course */
+.race-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.clock { display: flex; align-items: center; gap: 12px; }
+.clock b { font-family: var(--fun); font-weight: 700; font-size: 2.6rem; line-height: 1; font-variant-numeric: tabular-nums; min-width: 4.4ch; }
+.lamp-s { width: 28px; height: 28px; border-radius: 50%; background: var(--line); flex: none; }
+.lamp-s.on { background: var(--sun); box-shadow: 0 0 18px 6px rgba(255,201,40,.7); }
+.mode { font-weight: 800; font-size: .85rem; text-transform: uppercase; letter-spacing: .06em; color: var(--soft); }
+.mode.hot { color: var(--pink); }
+.btns { display: flex; flex-wrap: wrap; gap: 10px; }
+.banner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; background: #fff4c7; border: 3px solid var(--sun); border-radius: 18px; padding: 14px 18px; }
+.banner p { font-family: var(--fun); font-weight: 600; font-size: 1.35rem; }
+.track { border-radius: 18px; overflow: hidden; border: 3px solid var(--line); }
+.lane { position: relative; display: grid; grid-template-columns: 48px minmax(80px, 17%) 1fr; align-items: center; height: 66px; background: #fff; border-bottom: 3px dashed var(--line); transition: background .35s; }
+.lane:nth-child(even) { background: #f6faff; }
+.lane:last-child { border-bottom: 0; }
+.lane.best { background: #fff1b3; }
+.lane.fast { background: #e9fbf2; box-shadow: inset 0 0 0 4px var(--green); }
+.lane-no { width: 32px; height: 32px; margin-left: 8px; border-radius: 50%; color: #fff; display: grid; place-items: center; font-family: var(--fun); font-weight: 700; }
+.lane-name { font-weight: 800; padding-right: 8px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lane-run { position: relative; height: 100%; margin-right: 52px; border-left: 4px solid var(--ink); }
+.finish { position: absolute; top: 0; bottom: 0; right: 30px; width: 10px; background: repeating-conic-gradient(var(--ink) 0 25%, #fff 0 50%) 0 0 / 10px 10px; }
+.runner { position: absolute; top: 17px; left: 0; width: 30px; height: 30px; margin-left: -15px; border-radius: 50%; color: #fff; display: grid; place-items: center; font-family: var(--fun); font-weight: 700; font-size: .9rem; border: 3px solid #fff; box-shadow: 0 2px 6px rgba(31,42,72,.3); will-change: transform; }
+.tag { position: absolute; left: 50%; bottom: calc(100% + 2px); transform: translateX(-50%); white-space: nowrap; font-weight: 800; font-size: .7rem; background: var(--ink); color: #fff; padding: 0 7px; border-radius: 6px; }
+.speed { position: absolute; left: 0; right: 0; bottom: 2px; height: 12px; display: flex; align-items: center; gap: 6px; }
+.bar { height: 7px; border-radius: 4px; width: 0; transition: width .12s linear; }
+.snum { font-weight: 800; font-size: .7rem; color: var(--soft); white-space: nowrap; }
+.rank { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 40px; text-align: center; font-family: var(--fun); font-weight: 700; font-size: 1.3rem; }
+.rank.gold { background: var(--sun); border-radius: 12px; }
+.track.compact .lane { height: 36px; grid-template-columns: 38px minmax(80px, 15%) 1fr; }
+.track.compact .lane-no { width: 24px; height: 24px; font-size: .8rem; margin-left: 6px; }
+.track.compact .lane-name { font-size: .85rem; }
+.track.compact .runner { top: 4px; width: 22px; height: 22px; margin-left: -11px; font-size: .65rem; border-width: 2px; }
+.track.compact .tag { left: calc(100% + 4px); bottom: auto; top: 50%; transform: translateY(-50%); }
+.track.compact .speed { bottom: 2px; height: 5px; }
+.track.compact .bar { height: 4px; }
+.track.compact .snum { display: none; }
+.track.compact .rank { font-size: 1rem; }
+.empty { padding: 24px; font-weight: 700; color: var(--soft); text-align: center; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 20px; font-weight: 700; font-size: .9rem; color: var(--soft); }
+.legend i { display: inline-block; width: 14px; height: 14px; border-radius: 4px; vertical-align: -2px; margin-right: 6px; }
+
+/* Données et cotes */
+.scroll { overflow-x: auto; }
+table { border-collapse: separate; border-spacing: 0 6px; width: 100%; font-size: 1.05rem; }
+th { font-family: var(--fun); font-weight: 600; font-size: .95rem; color: var(--soft); text-align: center; padding: 4px 10px; white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+td { background: #f6faff; padding: 10px 12px; text-align: center; white-space: nowrap; font-weight: 800; font-variant-numeric: tabular-nums; }
+td:first-child { border-radius: 14px 0 0 14px; font-family: var(--fun); font-weight: 600; font-size: 1.15rem; }
+td:last-child { border-radius: 0 14px 14px 0; }
+.unit { color: var(--soft); font-weight: 700; font-size: .85em; }
+.cote { display: inline-grid; place-items: center; width: 2.1em; height: 2.1em; border-radius: 50%; color: #fff; font-family: var(--fun); font-weight: 700; font-size: 1.05rem; }
+.c1 { background: var(--green); } .c2 { background: var(--teal); } .c3 { background: var(--blue); } .c4 { background: var(--purple); } .c5 { background: var(--pink); }
+.sep { width: 18px; padding: 0; background: transparent; }
+.x { background: none; padding: 2px 8px; color: var(--soft); font-size: 1.2rem; line-height: 1; }
+.grille { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.g { background: #f6faff; border-radius: 18px; padding: 14px 16px; display: grid; gap: 6px; min-width: 0; }
+.g h3 { margin: 0 0 4px; font-family: var(--fun); font-weight: 600; font-size: 1.1rem; }
+.g-row { display: flex; align-items: center; gap: 12px; font-weight: 800; }
+.g-row .cote { width: 1.8em; height: 1.8em; font-size: .95rem; }
+.tools { display: flex; flex-wrap: wrap; gap: 4px 20px; }
+
+.reveal { display: flex; justify-content: center; }
+.reveal button { font-size: 1.2rem; padding: 14px 28px; }
+
+/* Élève */
+.rule { background: #fff4c7; border-radius: 16px; padding: 12px 16px; font-weight: 800; }
+
+/* Écran de test */
+#stage { position: fixed; inset: 0; background: var(--night); color: #fff; z-index: 50; display: grid; place-items: center;
+  touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; overflow: hidden;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
+#stage .msg { position: relative; z-index: 2; text-align: center; display: grid; gap: 14px; padding: 24px; max-width: 32ch; pointer-events: none; }
+#stage .big { font-family: var(--fun); font-weight: 700; font-size: clamp(2.2rem, 8vw, 3.4rem); line-height: 1; text-wrap: balance; }
+#stage .sub { color: #c6cdf2; font-size: 1.1rem; font-weight: 700; }
+#lamp, #lampOff { position: absolute; width: min(62vmin, 420px); aspect-ratio: 1; max-width: 100%; border-radius: 50%; pointer-events: none; }
+#lamp { background: radial-gradient(circle at 40% 38%, #fff9dc 0%, var(--sun) 45%, #ff9d00 100%); box-shadow: 0 0 90px 34px rgba(255,201,40,.55), 0 0 230px 100px rgba(255,201,40,.25); }
+#lampOff { background: #262d66; border: 4px solid #333b80; }
+#progress { position: absolute; left: 50%; bottom: calc(28px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); width: min(80vw, 420px); display: grid; gap: 8px; text-align: center; pointer-events: none; font-family: var(--fun); font-weight: 700; font-size: 1.7rem; z-index: 2; }
+#progress .pbar { height: 14px; border-radius: 7px; background: #333b80; overflow: hidden; }
+#progress .fill { height: 100%; width: 0; background: linear-gradient(90deg, var(--pink), var(--orange), var(--sun)); }
+.ripple { position: absolute; width: 60px; height: 60px; margin: -30px 0 0 -30px; border-radius: 50%; border: 3px solid var(--sun); pointer-events: none; animation: rip .35s ease-out forwards; }
+@keyframes rip { to { transform: scale(2.2); opacity: 0; } }
+#stage .result { pointer-events: auto; display: grid; gap: 14px; }
+#stage .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+#stage .tiles div { border-radius: 18px; padding: 12px 14px; }
+#stage .tiles span { display: block; font-weight: 800; font-size: .85rem; opacity: .9; }
+#stage .tiles b { font-family: var(--fun); font-weight: 700; font-size: 1.9rem; line-height: 1.1; }
+#stage .sent { font-weight: 800; }
+#stage .sent.ok { color: #7ff0b4; }
+#stage .sent.bad { color: #ffb3c8; }
+#stage .sent button { font-size: .9rem; padding: 6px 14px; margin-left: 6px; }
+#stage .cancel { position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); right: calc(12px + env(safe-area-inset-right, 0px)); pointer-events: auto; font-size: .9rem; padding: 8px 16px; background: #333b80; color: #fff; z-index: 3; }
+@media (prefers-reduced-motion: reduce) { .ripple { animation-duration: .01s; } .bar { transition: none; } }
+@media (max-width: 520px) { .lane { grid-template-columns: 40px minmax(64px, 24%) 1fr; } .clock b { font-size: 2.1rem; } }
+</style>
+</head>
+<body>
+
+<!-- ============ ÉLÈVE ============ -->
+<main id="viewStudent" hidden>
+  <div class="card">
+    <div class="rainbow" aria-hidden="true"><i style="background:var(--pink)"></i><i style="background:var(--orange)"></i><i style="background:var(--sun)"></i><i style="background:var(--green)"></i><i style="background:var(--blue)"></i><i style="background:var(--purple)"></i></div>
+    <h1>Course de 30 foulées</h1>
+    <p class="soft">Quand la lumière s'allume, tapote 30 fois le plus vite possible.</p>
+    <p class="rule">Un seul doigt : l'index. Le téléphone posé sur la table.</p>
+    <form class="field" id="stForm">
+      <input type="text" id="stName" maxlength="30" autocomplete="off" placeholder="Ton prénom" aria-label="Ton prénom">
+      <button class="btn-go" type="submit">Je suis prêt·e!</button>
+    </form>
+  </div>
+</main>
+
+<!-- ============ TABLEAU ============ -->
+<main id="viewBoard" hidden>
+  <div class="card">
+    <div class="head">
+      <div style="display:grid;gap:12px;min-width:0">
+        <div class="rainbow" aria-hidden="true"><i style="background:var(--pink)"></i><i style="background:var(--orange)"></i><i style="background:var(--sun)"></i><i style="background:var(--green)"></i><i style="background:var(--blue)"></i><i style="background:var(--purple)"></i></div>
+        <h1>Course de 30 foulées</h1>
+        <p class="join" id="joinText"></p>
+      </div>
+      <div class="qr" id="qr" aria-label="Code QR pour rejoindre la course"></div>
+    </div>
+    <div style="display:grid;gap:10px">
+      <p><span class="count" id="count">0</span> <span class="soft">coureurs arrivés</span> <span class="err" id="netErr" hidden>· connexion impossible, nouvel essai…</span></p>
+      <div class="chips" id="chips"></div>
+      <div><button class="btn-blue" type="button" id="runHere">Faire courir quelqu'un ici</button></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="race-top">
+      <h2>La course</h2>
+      <div class="clock"><span class="lamp-s" id="lampS" aria-hidden="true"></span><b id="clock">0,00</b><span class="mode" id="mode">Prêts?</span></div>
+    </div>
+    <div class="btns">
+      <button class="btn-go" type="button" id="playBtn">Lancer la course</button>
+      <button type="button" id="realBtn">Vitesse réelle</button>
+    </div>
+    <div class="banner" id="banner" hidden role="status"><p id="bannerText"></p><button class="btn-go" type="button" id="contBtn">Continuer</button></div>
+    <div class="track" id="track"></div>
+    <div class="legend"><span><i style="background:#ffd84d"></i>Meilleur départ</span><span><i style="background:#e9fbf2;box-shadow:inset 0 0 0 3px var(--green)"></i>Plus rapide</span><span>La barre sous chaque coureur : sa vitesse</span></div>
+  </div>
+
+  <div class="reveal"><button class="btn-blue" type="button" id="revealBtn" aria-expanded="false" aria-controls="dataCard">Rendre visibles les données et cotes</button></div>
+
+  <div class="card" id="dataCard" hidden>
+    <h2>Données et cotes</h2>
+    <div class="scroll">
+      <table id="resTable">
+        <thead><tr><th>Coureur</th><th>Départ</th><th>Cote</th><th class="sep"></th><th>Vitesse</th><th>Cote</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="grille" id="grille"></div>
+    <div class="tools">
+      <button type="button" class="link" id="clearAll">Effacer tous les résultats</button>
+    </div>
+  </div>
+</main>
+
+<!-- ============ ÉCRAN DE TEST ============ -->
+<div id="stage" hidden>
+  <div id="lampOff" hidden></div>
+  <div id="lamp" hidden></div>
+  <div class="msg" id="stageMsg"></div>
+  <div id="progress" hidden><div><span id="progNum">0</span> / 30</div><div class="pbar"><div class="fill" id="progFill"></div></div></div>
+  <button type="button" class="cancel" id="cancelBtn">Annuler</button>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var PREVIEW = false;
+  var STRIDES = 30, TIMEOUT_MS = 15000, WAIT_MIN = 3000, WAIT_MAX = 6000, POLL_MS = 3000;
+  var API = "/api/resultats";
+  var COLORS = ["#3d7cff", "#ff5c8a", "#22b573", "#ff8a3d", "#8b5cf6", "#12b5c4"];
+  var $ = function (id) { return document.getElementById(id); };
+  function fmt(v, d) { return v == null ? "—" : v.toFixed(d || 0).replace(".", ","); }
+  function sec(ms) { return ms == null ? "—" : fmt(ms / 1000, 2) + " s"; }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function cleanCode(s) { return String(s || "").trim().toUpperCase().replace(/[^A-Z0-9-]/g, "").slice(0, 20); }
+  function color(i) { return COLORS[i % COLORS.length]; }
+
+  // ---------- Mesures ----------
+  function rt(r) { return r.taps.length ? r.taps[0] : null; }
+  function done(r) { return r.taps.length >= STRIDES; }
+  function arrival(r) { return done(r) ? r.taps[STRIDES - 1] : null; }
+  function cadence(r) { if (!done(r)) return null; var t = r.taps[STRIDES - 1] - r.taps[0]; return t > 0 ? (STRIDES - 1) / (t / 1000) : null; }
+  function cad1(r) { var c = cadence(r); return c == null ? null : Math.round(c * 10) / 10; }
+
+  // ---------- Stockage ----------
+  var apiStore = {
+    list: function (c) { return fetch(API + "?classe=" + encodeURIComponent(c), { cache: "no-store" }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }).then(function (d) { return d.results || []; }); },
+    add: function (c, rec) { return fetch(API, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ classe: c, id: rec.id, name: rec.name, taps: rec.taps }) }).then(function (r) { if (!r.ok) throw new Error(r.status); }); },
+    remove: function (c, id) { return fetch(API + "?classe=" + encodeURIComponent(c) + "&id=" + encodeURIComponent(id), { method: "DELETE" }); },
+    clear: function (c) { return fetch(API + "?classe=" + encodeURIComponent(c), { method: "DELETE" }); }
+  };
+  var mem = {};
+  function lsGet(c) { try { var v = JSON.parse(localStorage.getItem("course30.local." + c) || "{}"); return v && typeof v === "object" ? v : {}; } catch (e) { return mem[c] || {}; } }
+  function lsSet(c, v) { mem[c] = v; try { localStorage.setItem("course30.local." + c, JSON.stringify(v)); } catch (e) {} }
+  var localStore = {
+    list: function (c) { var v = lsGet(c); return Promise.resolve(Object.keys(v).map(function (k) { return v[k]; })); },
+    add: function (c, rec) { var v = lsGet(c); v[rec.id] = { id: rec.id, name: rec.name, taps: rec.taps, at: Date.now() }; lsSet(c, v); return Promise.resolve(); },
+    remove: function (c, id) { var v = lsGet(c); delete v[id]; lsSet(c, v); return Promise.resolve(); },
+    clear: function (c) { lsSet(c, {}); return Promise.resolve(); }
+  };
+  var store = PREVIEW ? localStore : apiStore;
+
+  function deviceId() {
+    var id = null;
+    try { id = localStorage.getItem("course30.id"); } catch (e) {}
+    if (!id || !/^[A-Za-z0-9]{6,40}$/.test(id)) {
+      id = ""; var a = "abcdefghijkmnopqrstuvwxyz23456789";
+      for (var i = 0; i < 16; i++) id += a.charAt(Math.floor(Math.random() * a.length));
+      try { localStorage.setItem("course30.id", id); } catch (e) {}
+    }
+    return id;
+  }
+  function nameId(n) { return ("ici" + n.normalize("NFD").replace(/[^A-Za-z0-9]/g, "").toLowerCase() + "000000").slice(0, 40); }
+
+  // ---------- Routage ----------
+  // Une seule classe : le site ouvre le tableau ; le code QR mène à ?eleve.
+  var CLASS_KEY = "CLASSE";
+
+  // ---------- Envoi d'un résultat ----------
+  function sendResult(classe, rec, el, after) {
+    el.className = "sent"; el.textContent = "Envoi au tableau…";
+    store.add(classe, rec).then(function () { el.className = "sent ok"; el.textContent = "Envoyé au tableau ✓"; if (after) after(); })
+      .catch(function () {
+        el.className = "sent bad"; el.innerHTML = 'Envoi impossible. Vérifie le réseau.<button type="button" id="retryBtn">Réessayer</button>';
+        $("retryBtn").addEventListener("click", function (e) { e.stopPropagation(); sendResult(classe, rec, el, after); });
+      });
+  }
+
+  // =====================================================
+  // ÉLÈVE
+  // =====================================================
+  function startStudent(classe) {
+    $("viewStudent").hidden = false;
+    try { var saved = localStorage.getItem("course30.name"); if (saved) $("stName").value = saved; } catch (e) {}
+    $("stForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+      var n = $("stName").value.trim().slice(0, 30);
+      if (!n) { $("stName").focus(); $("stName").placeholder = "Écris d'abord ton prénom"; return; }
+      try { localStorage.setItem("course30.name", n); } catch (e2) {}
+      runTest(n, function (res) { return function (el) { sendResult(classe, { id: PREVIEW ? nameId(n) : deviceId(), name: n, taps: res.taps }, el); }; }, null);
+    });
+  }
+
+  // =====================================================
+  // ÉCRAN DE TEST
+  // =====================================================
+  var stage = $("stage"), msg = $("stageMsg"), lamp = $("lamp"), lampOff = $("lampOff"), prog = $("progress");
+  var phase = "off", who = "", waitTimer = null, endTimer = null, onset = 0, taps = [], onDone = null, onClose = null;
+  function show(html) { msg.innerHTML = html; }
+  function runTest(name, cb, closeCb) { onDone = cb; onClose = closeCb; openStage(name); }
+  function openStage(name) {
+    who = name; stage.hidden = false; lamp.hidden = true; lampOff.hidden = true; prog.hidden = true; phase = "ready";
+    show('<div class="big">' + esc(name) + ', à tes marques!</div><div class="sub">Un seul doigt : l\'index. Touche l\'écran pour te placer. Quand la lumière s\'allume, tapote 30 fois le plus vite possible!</div>');
+  }
+  function closeStage() { clearTimeout(waitTimer); clearTimeout(endTimer); phase = "off"; stage.hidden = true; lamp.hidden = true; lampOff.hidden = true; prog.hidden = true; if (onClose) onClose(); }
+  function startWait() {
+    phase = "wait"; lampOff.hidden = false;
+    show('<div class="big">Prêt·e…</div><div class="sub">Ne touche pas encore!</div>');
+    waitTimer = setTimeout(lightOn, WAIT_MIN + Math.random() * (WAIT_MAX - WAIT_MIN));
+  }
+  function setProg() { $("progNum").textContent = taps.length; $("progFill").style.width = (taps.length / STRIDES * 100) + "%"; }
+  function lightOn() {
+    taps = []; show(""); setProg(); prog.hidden = false;
+    lamp.hidden = false; lampOff.hidden = true; phase = "go";
+    onset = performance.now();
+    requestAnimationFrame(function () { onset = performance.now(); });
+    endTimer = setTimeout(finish, TIMEOUT_MS);
+  }
+  function falseStart() {
+    clearTimeout(waitTimer); phase = "ready"; lampOff.hidden = true;
+    show('<div class="big">Oups, faux départ!</div><div class="sub">Tu as touché avant la lumière. Touche l\'écran pour recommencer.</div>');
+  }
+  function finish() {
+    clearTimeout(endTimer);
+    phase = "done"; lamp.hidden = true; lampOff.hidden = true; prog.hidden = true;
+    var res = { name: who, taps: taps.map(function (t) { return Math.round(t - onset); }) };
+    var ok = done(res);
+    msg.innerHTML = '<div class="result"><div class="big">' + (ok ? "Bravo!" : "Temps écoulé") + "</div>" +
+      (ok ? '<div class="tiles"><div style="background:var(--pink)"><span>Départ</span><b>' + rt(res) + ' ms</b></div><div style="background:var(--blue)"><span>Vitesse</span><b>' + fmt(cadence(res), 1) + " f/s</b></div></div>"
+          : '<div class="sub">Tu as fait ' + res.taps.length + " foulées sur 30. Essaie encore!</div>") +
+      (ok ? '<p class="sent" id="sentStatus"></p>' : "") +
+      '<div class="btns" style="justify-content:center"><button type="button" class="btn-go" id="againBtn">Recourir</button><button type="button" id="backBtn">Terminer</button></div></div>';
+    if (ok && onDone) onDone(res)($("sentStatus"));
+    $("backBtn").addEventListener("click", function (e) { e.stopPropagation(); closeStage(); });
+    $("againBtn").addEventListener("click", function (e) { e.stopPropagation(); openStage(who); });
+  }
+  function ripple(x, y) { var d = document.createElement("div"); d.className = "ripple"; d.style.left = x + "px"; d.style.top = y + "px"; stage.appendChild(d); setTimeout(function () { d.remove(); }, 400); }
+  stage.addEventListener("pointerdown", function (e) {
+    if (e.target.closest("button")) return;
+    e.preventDefault();
+    var t = performance.now();
+    if (phase === "go") { taps.push(t); ripple(e.clientX, e.clientY); setProg(); if (taps.length >= STRIDES) { phase = "done"; setTimeout(finish, 250); } }
+    else if (phase === "ready") startWait();
+    else if (phase === "wait") falseStart();
+  });
+  stage.addEventListener("touchstart", function (e) { if (!e.target.closest("button")) e.preventDefault(); }, { passive: false });
+  stage.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+  $("cancelBtn").addEventListener("click", function (e) { e.stopPropagation(); closeStage(); });
+
+  // =====================================================
+  // TABLEAU
+  // =====================================================
+  var results = [], sig = null, playing = false, pendingRender = false, classCode = "";
+
+  function startBoard(code) {
+    classCode = code;
+    $("viewBoard").hidden = false;
+    if (PREVIEW) { $("qr").hidden = true; $("joinText").textContent = "Aperçu sur un seul appareil : touchez « Faire courir quelqu'un ici » pour chaque coureur."; }
+    else {
+      var url = location.origin + location.pathname + "?eleve";
+      $("joinText").textContent = "Scanne le code ou va sur " + url.replace(/^https?:\/\//, "");
+      try { new QRCode($("qr"), { text: url, width: 160, height: 160, correctLevel: QRCode.CorrectLevel.M }); } catch (e) { $("qr").hidden = true; }
+    }
+    $("runHere").addEventListener("click", function () {
+      askName(function (name) {
+        runTest(name, function (res) { return function (el) { sendResult(classCode, { id: nameId(name), name: name, taps: res.taps }, el, poll); }; }, poll);
+      });
+    });
+    renderBoard(); poll(); setInterval(poll, POLL_MS);
+  }
+  // Petite saisie de prénom intégrée (les boîtes de dialogue du navigateur ne sont pas fiables partout)
+  function askName(cb) {
+    var box = document.createElement("form");
+    box.className = "field"; box.style.marginTop = "6px";
+    box.innerHTML = '<input type="text" maxlength="30" autocomplete="off" placeholder="Prénom du coureur" aria-label="Prénom du coureur"><button class="btn-go" type="submit">Au départ!</button>';
+    var holder = $("runHere").parentNode;
+    if (holder.querySelector("form")) { holder.querySelector("input").focus(); return; }
+    holder.appendChild(box);
+    var inp = box.querySelector("input"); inp.focus();
+    box.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var n = inp.value.trim().slice(0, 30);
+      if (!n) { inp.focus(); return; }
+      box.remove(); cb(n);
+    });
+  }
+  function poll() {
+    store.list(classCode).then(function (list) {
+      $("netErr").hidden = true;
+      list = list.filter(function (r) { return r && Array.isArray(r.taps) && r.name; });
+      list.sort(function (a, b) { return (a.at || 0) - (b.at || 0); });
+      var s = JSON.stringify(list.map(function (r) { return [r.id, r.at]; }));
+      if (s === sig) return;
+      sig = s; results = list;
+      if (playing) { pendingRender = true; renderChips(); } else renderBoard();
+    }).catch(function () { $("netErr").hidden = false; });
+  }
+  function renderChips() {
+    $("count").textContent = results.length;
+    $("chips").innerHTML = results.map(function (r, i) { return '<span class="chip" style="background:' + color(i) + '">' + esc(r.name) + "</span>"; }).join("") ||
+      '<span class="soft">En attente des premiers coureurs…</span>';
+  }
+  function renderBoard() { pendingRender = false; renderChips(); computeGrid(); buildTrack(); renderTable(); renderGrille(); }
+
+  // ---------- Cotes par quintiles ----------
+  var grid = { rt: null, sp: null };
+  function quant(s, p) { var i = (s.length - 1) * p, lo = Math.floor(i), hi = Math.ceil(i); return s[lo] + (s[hi] - s[lo]) * (i - lo); }
+  function computeGrid() {
+    var fin = results.filter(done);
+    if (fin.length < 2) { grid = { rt: null, sp: null }; return; }
+    var rts = fin.map(rt).sort(function (a, b) { return a - b; });
+    var sps = fin.map(cad1).sort(function (a, b) { return a - b; });
+    grid.rt = [.2, .4, .6, .8].map(function (p) { return Math.round(quant(rts, p)); });
+    grid.sp = [.8, .6, .4, .2].map(function (p) { return Math.round(quant(sps, p) * 10) / 10; });
+  }
+  function coteRT(r) { if (!grid.rt || !done(r)) return null; var v = rt(r); for (var i = 0; i < 4; i++) if (v <= grid.rt[i]) return i + 1; return 5; }
+  function coteSp(r) { if (!grid.sp || !done(r)) return null; var v = cad1(r); for (var i = 0; i < 4; i++) if (v >= grid.sp[i]) return i + 1; return 5; }
+  function badge(c) { return c == null ? "—" : '<span class="cote c' + c + '">' + c + "</span>"; }
+  function renderGrille() {
+    if (!grid.rt) { $("grille").innerHTML = '<p class="soft">Les cotes apparaissent dès que 2 coureurs ont terminé.</p>'; return; }
+    var g = grid.rt, s = grid.sp;
+    function row(c, t) { return '<div class="g-row">' + badge(c) + "<span>" + t + "</span></div>"; }
+    var a = "<h3>Cotes du départ</h3>" + row(1, "jusqu'à " + g[0] + " ms");
+    for (var i = 1; i < 4; i++) a += row(i + 1, g[i - 1] >= g[i] ? g[i] + " ms" : "de " + (g[i - 1] + 1) + " à " + g[i] + " ms");
+    a += row(5, "plus de " + g[3] + " ms");
+    var b = "<h3>Cotes de la vitesse</h3>" + row(1, fmt(s[0], 1) + " f/s et plus");
+    for (var j = 1; j < 4; j++) { var top = Math.round((s[j - 1] - .1) * 10) / 10; b += row(j + 1, top <= s[j] ? fmt(s[j], 1) + " f/s" : "de " + fmt(s[j], 1) + " à " + fmt(top, 1) + " f/s"); }
+    b += row(5, "moins de " + fmt(s[3], 1) + " f/s");
+    $("grille").innerHTML = '<div class="g">' + a + '</div><div class="g">' + b + "</div>";
+  }
+  function renderTable() {
+    var tb = document.querySelector("#resTable tbody");
+    if (!results.length) { tb.innerHTML = '<tr><td colspan="7" class="soft" style="text-align:center">Aucun coureur pour l\'instant.</td></tr>'; return; }
+    tb.innerHTML = results.map(function (r) {
+      return "<tr>" +
+        "<td>" + esc(r.name) + "</td>" +
+        "<td>" + (done(r) ? rt(r) + ' <span class="unit">ms</span>' : "—") + "</td>" +
+        "<td>" + badge(coteRT(r)) + "</td>" +
+        '<td class="sep"></td>' +
+        "<td>" + (done(r) ? fmt(cadence(r), 1) + ' <span class="unit">f/s</span>' : "—") + "</td>" +
+        "<td>" + badge(coteSp(r)) + "</td>" +
+        '<td><button type="button" class="x" data-id="' + esc(r.id) + '" aria-label="Retirer ' + esc(r.name) + '">×</button></td></tr>';
+    }).join("");
+  }
+  document.querySelector("#resTable tbody").addEventListener("click", function (e) {
+    var b = e.target.closest(".x"); if (!b) return;
+    if (b.dataset.armed !== "1") { b.dataset.armed = "1"; b.textContent = "Retirer?"; setTimeout(function () { b.dataset.armed = ""; b.textContent = "×"; }, 3000); return; }
+    store.remove(classCode, b.dataset.id).then(poll, poll);
+  });
+  $("revealBtn").addEventListener("click", function () {
+    var card = $("dataCard"), open = card.hidden;
+    card.hidden = !open;
+    this.textContent = open ? "Masquer les données et cotes" : "Rendre visibles les données et cotes";
+    this.setAttribute("aria-expanded", open ? "true" : "false");
+    if (open) card.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+  var armedAll = false;
+  $("clearAll").addEventListener("click", function () {
+    var self = this;
+    if (!armedAll) { armedAll = true; self.textContent = "Touchez encore pour tout effacer"; setTimeout(function () { armedAll = false; self.textContent = "Effacer tous les résultats"; }, 3000); return; }
+    armedAll = false; self.textContent = "Effacer tous les résultats";
+    store.clear(classCode).then(poll, poll);
+  });
+
+  // ---------- Piste ----------
+  var lanes = [], lastT = -1, finishOrder = [];
+  function bestStart() { var b = -1, bv = Infinity; results.forEach(function (r, i) { var v = rt(r); if (done(r) && v < bv) { bv = v; b = i; } }); return b; }
+  function fastest() { var b = -1, bv = -1; results.forEach(function (r, i) { var v = cadence(r); if (v != null && v > bv) { bv = v; b = i; } }); return b; }
+  function buildTrack() {
+    var tr = $("track"), list = results;
+    tr.classList.toggle("compact", list.length > 12);
+    if (!list.length) { tr.innerHTML = '<div class="empty">Les couloirs se remplissent quand les élèves ont couru.</div>'; lanes = []; return; }
+    tr.innerHTML = list.map(function (r, i) {
+      var c = color(i);
+      return '<div class="lane" id="lane' + i + '"><span class="lane-no" style="background:' + c + '">' + (i + 1) + '</span><span class="lane-name">' + esc(r.name) + '</span>' +
+        '<div class="lane-run"><div class="finish"></div>' +
+        '<div class="runner" id="run' + i + '" style="background:' + c + '">' + esc(r.name.charAt(0).toUpperCase()) + '<span class="tag" id="tag' + i + '" hidden></span></div>' +
+        '<div class="speed"><div class="bar" id="bar' + i + '" style="background:' + c + '"></div><span class="snum" id="snum' + i + '"></span></div></div>' +
+        '<span class="rank" id="rank' + i + '"></span></div>';
+    }).join("");
+    lanes = list.map(function (r, i) { return { r: r, el: $("lane" + i), run: $("run" + i), tag: $("tag" + i), bar: $("bar" + i), num: $("snum" + i), rank: $("rank" + i), w: 0, started: false, finished: false }; });
+    measure(); resetRace();
+  }
+  function measure() { lanes.forEach(function (L) { L.w = Math.max(0, L.run.parentNode.clientWidth - 42); }); }
+  window.addEventListener("resize", function () { measure(); drawAt(lastT); });
+  function posAt(r, t) {
+    var a = r.taps, n = a.length;
+    if (!n || t < a[0]) return 0;
+    var k = 0; while (k < n && a[k] <= t) k++;
+    if (k >= STRIDES) return 1;
+    if (k >= n) return n / STRIDES;
+    return (k + (t - a[k - 1]) / (a[k] - a[k - 1])) / STRIDES;
+  }
+  function speedAt(r, t) {
+    var a = r.taps, k = 0; while (k < a.length && a[k] <= t) k++;
+    if (k < 2) return null;
+    if (k >= STRIDES) return cadence(r);
+    var j = Math.max(0, k - 4), dt = a[k - 1] - a[j];
+    return dt > 0 ? (k - 1 - j) / (dt / 1000) : null;
+  }
+  function drawAt(t) {
+    lastT = t;
+    $("lampS").classList.toggle("on", t >= 0);
+    $("clock").textContent = fmt(Math.max(0, t) / 1000, 2);
+    var best = bestStart();
+    lanes.forEach(function (L, i) {
+      L.run.style.transform = "translateX(" + Math.round(posAt(L.r, t) * L.w) + "px)";
+      var first = rt(L.r);
+      if (first != null && t >= first && !L.started) { L.started = true; L.tag.textContent = first + " ms"; L.tag.hidden = false; if (i === best) L.el.classList.add("best"); }
+      var s = speedAt(L.r, t);
+      if (s != null) { L.bar.style.width = Math.min(100, s / 10 * 75) + "%"; L.num.textContent = fmt(s, 1); } else { L.bar.style.width = "0"; L.num.textContent = ""; }
+      var arr = arrival(L.r);
+      if (arr != null && t >= arr && !L.finished) { L.finished = true; finishOrder.push(i); L.rank.textContent = finishOrder.length + (finishOrder.length === 1 ? "er" : "e"); L.rank.classList.toggle("gold", finishOrder.length === 1); L.tag.textContent = sec(arr); }
+    });
+  }
+  function setMode(txt, hot) { var m = $("mode"); m.textContent = txt; m.classList.toggle("hot", !!hot); }
+  function resetRace() {
+    finishOrder = [];
+    lanes.forEach(function (L) { L.started = false; L.finished = false; L.el.classList.remove("best", "fast"); L.tag.hidden = true; L.rank.textContent = ""; L.rank.classList.remove("gold"); });
+    $("banner").hidden = true; drawAt(-1); setMode("Prêts?", false);
+  }
+  var raf = 0, resume = null;
+  function pause(text, next) { cancelAnimationFrame(raf); $("bannerText").textContent = text; $("contBtn").hidden = false; $("banner").hidden = false; setMode("Pause", true); resume = next; }
+  $("contBtn").addEventListener("click", function () { $("banner").hidden = true; var f = resume; resume = null; if (f) f(); });
+  function play(realSpeed) {
+    cancelAnimationFrame(raf); if (pendingRender) renderBoard(); resetRace(); resume = null;
+    if (!lanes.length) return;
+    var list = results;
+    var starts = list.map(rt).filter(function (v) { return v != null; });
+    var startEnd = (starts.length ? Math.max.apply(null, starts) : 0) + 120;
+    var halfs = list.filter(done).map(function (r) { return r.taps[STRIDES / 2 - 1]; });
+    var midT = Math.max(startEnd + 200, halfs.length ? Math.min.apply(null, halfs) : startEnd + 200);
+    var endT = Math.max.apply(null, list.map(function (r) { return r.taps.length ? r.taps[r.taps.length - 1] : 0; })) + 300;
+    var t = -900, prev = null, p1 = false, p2 = false, bi = bestStart(), fi = fastest();
+    playing = true;
+    function go() { prev = null; raf = requestAnimationFrame(step); }
+    function step(now) {
+      if (prev == null) prev = now;
+      var dt = Math.min(64, now - prev); prev = now;
+      var rate;
+      if (realSpeed) { rate = 1; setMode("Vitesse réelle", false); }
+      else if (t < 0) { rate = .5; setMode("À vos marques…", false); }
+      else if (t < startEnd) { rate = 1 / 10; setMode("Départ au super ralenti", true); }
+      else { rate = 1 / 3; setMode("Ralenti", false); }
+      t += dt * rate;
+      if (!p1 && t >= startEnd) { t = startEnd; drawAt(t); p1 = true; if (bi >= 0) { pause("⭐ Meilleur départ : " + list[bi].name + "! Parti·e " + rt(list[bi]) + " ms après la lumière.", go); return; } }
+      if (!p2 && t >= midT) {
+        t = midT; drawAt(t); p2 = true;
+        if (fi >= 0) { lanes[fi].el.classList.add("fast"); pause("⚡ Le plus rapide : " + list[fi].name + "! " + fmt(cadence(list[fi]), 1) + " foulées par seconde." + (fi !== bi ? " Ce n'est pas le meilleur départ!" : ""), go); return; }
+      }
+      drawAt(t);
+      if (t < endT) { raf = requestAnimationFrame(step); return; }
+      setMode("Arrivée!", false); playing = false;
+      if (finishOrder.length) {
+        var wi = finishOrder[0], w = list[wi], txt = "🏆 " + w.name + " gagne la course! ";
+        if (wi === bi && wi === fi) txt += "Meilleur départ et plus rapide.";
+        else if (wi === bi) txt += "Meilleur départ, mais pas le plus rapide.";
+        else if (wi === fi) txt += "Le plus rapide, mais pas le meilleur départ.";
+        else txt += "Ni le meilleur départ, ni le plus rapide!";
+        $("bannerText").textContent = txt; $("contBtn").hidden = true; $("banner").hidden = false;
+      }
+      if (pendingRender) setTimeout(function () { if (!playing) renderBoard(); }, 5000);
+    }
+    go();
+  }
+  $("playBtn").addEventListener("click", function () { play(false); });
+  $("realBtn").addEventListener("click", function () { play(true); });
+
+  // Démarrage (à la fin, une fois tout le reste prêt)
+  if (!PREVIEW && new URLSearchParams(location.search).has("eleve")) startStudent(CLASS_KEY);
+  else startBoard(CLASS_KEY);
+})();
+</script>
+</body>
+</html>
