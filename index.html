@@ -115,7 +115,7 @@ td:first-child { border-radius: 14px 0 0 14px; font-family: var(--fun); font-wei
 td:last-child { border-radius: 0 14px 14px 0; }
 .unit { color: var(--soft); font-weight: 700; font-size: .85em; }
 .cote { display: inline-grid; place-items: center; width: 2.1em; height: 2.1em; border-radius: 50%; color: #fff; font-family: var(--fun); font-weight: 700; font-size: 1.05rem; }
-.c1 { background: var(--green); } .c2 { background: var(--teal); } .c3 { background: var(--blue); } .c4 { background: var(--purple); } .c5 { background: var(--pink); }
+.c1 { background: var(--green); } .c2 { background: var(--teal); } .c3 { background: var(--blue); } .c4 { background: var(--purple); } .c5 { background: var(--orange); } .c6 { background: var(--pink); } .c7 { background: #c2185b; }
 .sep { width: 18px; padding: 0; background: transparent; }
 .x { background: none; padding: 2px 8px; color: var(--soft); font-size: 1.2rem; line-height: 1; }
 .grille { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
@@ -125,7 +125,13 @@ td:last-child { border-radius: 0 14px 14px 0; }
 .g-row .cote { width: 1.8em; height: 1.8em; font-size: .95rem; }
 .tools { display: flex; flex-wrap: wrap; gap: 4px 20px; }
 
-.reveal { display: flex; justify-content: center; }
+.reveal { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+.plots { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }
+.plot { background: #f6faff; border-radius: 18px; padding: 14px; display: grid; gap: 6px; min-width: 0; }
+.plot h3 { margin: 0; font-family: var(--fun); font-weight: 600; font-size: 1.15rem; }
+.plot svg { width: 100%; height: auto; display: block; }
+.plot svg text { font-family: var(--body); font-weight: 700; fill: var(--soft); }
+.plot svg .nm { fill: var(--ink); font-size: 11px; }
 .reveal button { font-size: 1.2rem; padding: 14px 28px; }
 
 /* Élève */
@@ -141,7 +147,8 @@ td:last-child { border-radius: 0 14px 14px 0; }
 #lamp, #lampOff { position: absolute; width: min(62vmin, 420px); aspect-ratio: 1; max-width: 100%; border-radius: 50%; pointer-events: none; }
 #lamp { background: radial-gradient(circle at 40% 38%, #fff9dc 0%, var(--sun) 45%, #ff9d00 100%); box-shadow: 0 0 90px 34px rgba(255,201,40,.55), 0 0 230px 100px rgba(255,201,40,.25); }
 #lampOff { background: #262d66; border: 4px solid #333b80; }
-#progress { position: absolute; left: 50%; bottom: calc(28px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); width: min(80vw, 420px); display: grid; gap: 8px; text-align: center; pointer-events: none; font-family: var(--fun); font-weight: 700; font-size: 1.7rem; z-index: 2; }
+#progress { position: absolute; left: 50%; bottom: calc(28px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); width: min(80vw, 420px); display: grid; gap: 8px; text-align: center; pointer-events: none; font-family: var(--fun); font-weight: 700; font-size: 1.4rem; z-index: 2; }
+#progress .pnum { font-size: clamp(3.5rem, 16vw, 6rem); line-height: 1; color: var(--sun); }
 #progress .pbar { height: 14px; border-radius: 7px; background: #333b80; overflow: hidden; }
 #progress .fill { height: 100%; width: 0; background: linear-gradient(90deg, var(--pink), var(--orange), var(--sun)); }
 .ripple { position: absolute; width: 60px; height: 60px; margin: -30px 0 0 -30px; border-radius: 50%; border: 3px solid var(--sun); pointer-events: none; animation: rip .35s ease-out forwards; }
@@ -168,7 +175,7 @@ td:last-child { border-radius: 0 14px 14px 0; }
     <div class="rainbow" aria-hidden="true"><i style="background:var(--pink)"></i><i style="background:var(--orange)"></i><i style="background:var(--sun)"></i><i style="background:var(--green)"></i><i style="background:var(--blue)"></i><i style="background:var(--purple)"></i></div>
     <h1>Course de 30 foulées</h1>
     <p class="soft">Quand la lumière s'allume, tapote 30 fois le plus vite possible.</p>
-    <p class="rule">Un seul doigt : l'index. Le téléphone posé sur la table.</p>
+    <p class="rule">Un seul doigt : l'index. Le téléphone posé sur la table.<br>Ne compte pas : l'écran compte pour toi!</p>
     <form class="field" id="stForm">
       <input type="text" id="stName" maxlength="30" autocomplete="off" placeholder="Ton prénom" aria-label="Ton prénom">
       <button class="btn-go" type="submit">Je suis prêt·e!</button>
@@ -208,7 +215,10 @@ td:last-child { border-radius: 0 14px 14px 0; }
     <div class="legend"><span><i style="background:#ffd84d"></i>Meilleur départ</span><span><i style="background:#e9fbf2;box-shadow:inset 0 0 0 3px var(--green)"></i>Plus rapide</span><span>La barre sous chaque coureur : sa vitesse</span></div>
   </div>
 
-  <div class="reveal"><button class="btn-blue" type="button" id="revealBtn" aria-expanded="false" aria-controls="dataCard">Rendre visibles les données et cotes</button></div>
+  <div class="reveal">
+    <button class="btn-blue" type="button" id="revealBtn" aria-expanded="false" aria-controls="dataCard">Rendre visibles les données et cotes</button>
+    <button class="btn-blue" type="button" id="plotBtn" aria-expanded="false" aria-controls="plotCard">Voir le nuage de points</button>
+  </div>
 
   <div class="card" id="dataCard" hidden>
     <h2>Données et cotes</h2>
@@ -223,6 +233,16 @@ td:last-child { border-radius: 0 14px 14px 0; }
       <button type="button" class="link" id="clearAll">Effacer tous les résultats</button>
     </div>
   </div>
+
+  <div class="card" id="plotCard" hidden>
+    <h2>Nuage de points</h2>
+    <p class="soft">Chaque point est une personne, placée selon sa cote de départ et sa cote de vitesse.</p>
+    <div class="plots">
+      <div class="plot"><h3>Notre classe</h3><div id="plotClass"></div></div>
+      <div class="plot" id="adultBox" hidden><h3>Mes collègues (45 adultes)</h3><div id="plotAdults"></div></div>
+    </div>
+    <div class="tools"><button type="button" class="link" id="adultBtn">Comparer avec mes collègues</button></div>
+  </div>
 </main>
 
 <!-- ============ ÉCRAN DE TEST ============ -->
@@ -230,7 +250,7 @@ td:last-child { border-radius: 0 14px 14px 0; }
   <div id="lampOff" hidden></div>
   <div id="lamp" hidden></div>
   <div class="msg" id="stageMsg"></div>
-  <div id="progress" hidden><div><span id="progNum">0</span> / 30</div><div class="pbar"><div class="fill" id="progFill"></div></div></div>
+  <div id="progress" hidden><div><span class="pnum" id="progNum">0</span> / 30</div><div class="pbar"><div class="fill" id="progFill"></div></div></div>
   <button type="button" class="cancel" id="cancelBtn">Annuler</button>
 </div>
 
@@ -250,6 +270,10 @@ td:last-child { border-radius: 0 14px 14px 0; }
 
   // ---------- Mesures ----------
   function rt(r) { return r.taps.length ? r.taps[0] : null; }
+  function dep(r) { return rt(r); }
+  // Règles de validité, fixées d'avance et appliquées à tout le monde
+  var MAX_START_MS = 1000;   // départ plus long : la personne n'était pas prête
+  var MIN_GAP_MS = 50;       // deux tapotements plus rapprochés : plusieurs doigts
   function done(r) { return r.taps.length >= STRIDES; }
   function arrival(r) { return done(r) ? r.taps[STRIDES - 1] : null; }
   function cadence(r) { if (!done(r)) return null; var t = r.taps[STRIDES - 1] - r.taps[0]; return t > 0 ? (STRIDES - 1) / (t / 1000) : null; }
@@ -320,10 +344,11 @@ td:last-child { border-radius: 0 14px 14px 0; }
   var stage = $("stage"), msg = $("stageMsg"), lamp = $("lamp"), lampOff = $("lampOff"), prog = $("progress");
   var phase = "off", who = "", waitTimer = null, endTimer = null, onset = 0, taps = [], onDone = null, onClose = null;
   function show(html) { msg.innerHTML = html; }
-  function runTest(name, cb, closeCb) { onDone = cb; onClose = closeCb; openStage(name); }
+  var TRIALS = 3, trial = 0; // 3 essais réussis, seul le dernier est envoyé
+  function runTest(name, cb, closeCb) { onDone = cb; onClose = closeCb; trial = 0; openStage(name); }
   function openStage(name) {
     who = name; stage.hidden = false; lamp.hidden = true; lampOff.hidden = true; prog.hidden = true; phase = "ready";
-    show('<div class="big">' + esc(name) + ', à tes marques!</div><div class="sub">Un seul doigt : l\'index. Touche l\'écran pour te placer. Quand la lumière s\'allume, tapote 30 fois le plus vite possible!</div>');
+    show('<div class="sub" style="color:var(--sun);font-size:1.3rem">Essai ' + (trial + 1) + ' sur ' + TRIALS + (trial + 1 < TRIALS ? " (pratique)" : " (celui qui compte!)") + '</div><div class="big">' + esc(name) + ', à tes marques!</div><div class="sub">Un seul doigt : l\'index. Ne compte pas, l\'écran compte pour toi! Touche l\'écran pour te placer. Quand la lumière s\'allume, tapote le plus vite possible!</div>');
   }
   function closeStage() { clearTimeout(waitTimer); clearTimeout(endTimer); phase = "off"; stage.hidden = true; lamp.hidden = true; lampOff.hidden = true; prog.hidden = true; if (onClose) onClose(); }
   function startWait() {
@@ -333,7 +358,7 @@ td:last-child { border-radius: 0 14px 14px 0; }
   }
   function setProg() { $("progNum").textContent = taps.length; $("progFill").style.width = (taps.length / STRIDES * 100) + "%"; }
   function lightOn() {
-    taps = []; show(""); setProg(); prog.hidden = false;
+    taps = []; down = {}; multi = false; show(""); setProg(); prog.hidden = false;
     lamp.hidden = false; lampOff.hidden = true; phase = "go";
     onset = performance.now();
     requestAnimationFrame(function () { onset = performance.now(); });
@@ -347,22 +372,54 @@ td:last-child { border-radius: 0 14px 14px 0; }
     clearTimeout(endTimer);
     phase = "done"; lamp.hidden = true; lampOff.hidden = true; prog.hidden = true;
     var res = { name: who, taps: taps.map(function (t) { return Math.round(t - onset); }) };
+    var invalid = multi ? "Un seul doigt! On dirait que tu as utilisé plus d'un doigt."
+      : (rt(res) != null && rt(res) > MAX_START_MS) ? "Tu n'étais pas prêt·e au signal. Regarde bien l'écran!" : null;
+    if (invalid) {
+      msg.innerHTML = '<div class="result"><div class="big">Essai non valide</div><div class="sub">' + invalid + ' Ton essai n\'est pas envoyé. Recommence!</div>' +
+        '<div class="btns" style="justify-content:center"><button type="button" class="btn-go" id="againBtn">Recommencer</button><button type="button" id="backBtn">Annuler</button></div></div>';
+      $("backBtn").addEventListener("click", function (e) { e.stopPropagation(); closeStage(); });
+      $("againBtn").addEventListener("click", function (e) { e.stopPropagation(); openStage(who); });
+      return;
+    }
     var ok = done(res);
+    if (!ok) {
+      msg.innerHTML = '<div class="result"><div class="big">Temps écoulé</div><div class="sub">Tu as fait ' + res.taps.length + ' foulées sur 30. Cet essai ne compte pas. Recommence!</div>' +
+        '<div class="btns" style="justify-content:center"><button type="button" class="btn-go" id="againBtn">Recommencer</button><button type="button" id="backBtn">Annuler</button></div></div>';
+      $("backBtn").addEventListener("click", function (e) { e.stopPropagation(); closeStage(); });
+      $("againBtn").addEventListener("click", function (e) { e.stopPropagation(); openStage(who); });
+      return;
+    }
+    trial++;
+    if (trial < TRIALS) {
+      msg.innerHTML = '<div class="result"><div class="big">Essai ' + trial + ' réussi!</div>' +
+        '<div class="tiles"><div style="background:var(--pink)"><span>Départ</span><b>' + dep(res) + ' ms</b></div><div style="background:var(--blue)"><span>Vitesse</span><b>' + fmt(cadence(res), 1) + " f/s</b></div></div>" +
+        '<div class="sub">C\'était un essai de pratique. Encore ' + (TRIALS - trial) + (TRIALS - trial > 1 ? " essais" : " essai") + '!</div>' +
+        '<div class="btns" style="justify-content:center"><button type="button" class="btn-go" id="againBtn">Essai suivant</button><button type="button" id="backBtn">Annuler</button></div></div>';
+      $("backBtn").addEventListener("click", function (e) { e.stopPropagation(); closeStage(); });
+      $("againBtn").addEventListener("click", function (e) { e.stopPropagation(); openStage(who); });
+      return;
+    }
     msg.innerHTML = '<div class="result"><div class="big">' + (ok ? "Bravo!" : "Temps écoulé") + "</div>" +
-      (ok ? '<div class="tiles"><div style="background:var(--pink)"><span>Départ</span><b>' + rt(res) + ' ms</b></div><div style="background:var(--blue)"><span>Vitesse</span><b>' + fmt(cadence(res), 1) + " f/s</b></div></div>"
+      (ok ? '<div class="tiles"><div style="background:var(--pink)"><span>Départ</span><b>' + dep(res) + ' ms</b></div><div style="background:var(--blue)"><span>Vitesse</span><b>' + fmt(cadence(res), 1) + " f/s</b></div></div>"
           : '<div class="sub">Tu as fait ' + res.taps.length + " foulées sur 30. Essaie encore!</div>") +
       (ok ? '<p class="sent" id="sentStatus"></p>' : "") +
-      '<div class="btns" style="justify-content:center"><button type="button" class="btn-go" id="againBtn">Recourir</button><button type="button" id="backBtn">Terminer</button></div></div>';
+      '<div class="btns" style="justify-content:center"><button type="button" class="btn-go" id="backBtn">Terminer</button></div></div>';
     if (ok && onDone) onDone(res)($("sentStatus"));
     $("backBtn").addEventListener("click", function (e) { e.stopPropagation(); closeStage(); });
-    $("againBtn").addEventListener("click", function (e) { e.stopPropagation(); openStage(who); });
   }
   function ripple(x, y) { var d = document.createElement("div"); d.className = "ripple"; d.style.left = x + "px"; d.style.top = y + "px"; stage.appendChild(d); setTimeout(function () { d.remove(); }, 400); }
+  var down = {}, multi = false;
+  function clearDown(e) { delete down[e.pointerId]; }
+  stage.addEventListener("pointerup", clearDown);
+  stage.addEventListener("pointercancel", clearDown);
   stage.addEventListener("pointerdown", function (e) {
     if (e.target.closest("button")) return;
     e.preventDefault();
     var t = performance.now();
-    if (phase === "go") { taps.push(t); ripple(e.clientX, e.clientY); setProg(); if (taps.length >= STRIDES) { phase = "done"; setTimeout(finish, 250); } }
+    if (phase === "go") {
+      if (Object.keys(down).length > 0 || (taps.length && t - taps[taps.length - 1] < MIN_GAP_MS)) multi = true;
+      down[e.pointerId] = true;
+      taps.push(t); ripple(e.clientX, e.clientY); setProg(); if (taps.length >= STRIDES) { phase = "done"; setTimeout(finish, 250); } }
     else if (phase === "ready") startWait();
     else if (phase === "wait") falseStart();
   });
@@ -423,32 +480,69 @@ td:last-child { border-radius: 0 14px 14px 0; }
     $("chips").innerHTML = results.map(function (r, i) { return '<span class="chip" style="background:' + color(i) + '">' + esc(r.name) + "</span>"; }).join("") ||
       '<span class="soft">En attente des premiers coureurs…</span>';
   }
-  function renderBoard() { pendingRender = false; renderChips(); computeGrid(); buildTrack(); renderTable(); renderGrille(); }
+  function renderBoard() { pendingRender = false; renderChips(); computeGrid(); buildTrack(); renderTable(); renderGrille(); renderPlots(); }
+
+  // ---------- Nuage de points (cotes 1 à 7) ----------
+  // Collègues adultes (25-40 ans), cotes calculées dans leur propre groupe : [départ, vitesse]
+  var ADULTS = [[1,1],[1,1],[1,1],[1,1],[1,3],[1,4],[1,5],[1,5],[2,1],[2,2],[2,2],[2,3],[2,4],[3,1],[3,3],[3,3],[3,5],[3,6],[3,7],[3,7],[4,1],[4,2],[4,3],[4,4],[4,5],[4,7],[5,1],[5,2],[5,2],[5,3],[5,3],[5,7],[6,3],[6,3],[6,5],[6,6],[6,7],[6,7],[7,2],[7,3],[7,5],[7,6],[7,6],[7,6],[7,7]];
+  function plotSvg(pts, withNames) {
+    var W = 360, H = 360, L = 46, B = 44, T = 14, R = withNames ? 44 : 14, n = NC;
+    var sx = function (v) { return L + (v - .5) / n * (W - L - R); };
+    var sy = function (v) { return H - B - (v - .5) / n * (H - T - B); };
+    var h = '<svg viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Nuage de points des cotes">';
+    for (var k = 1; k <= n; k++) {
+      h += '<line x1="' + sx(k) + '" x2="' + sx(k) + '" y1="' + T + '" y2="' + (H - B) + '" stroke="#dfe7f3"/>';
+      h += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + sy(k) + '" y2="' + sy(k) + '" stroke="#dfe7f3"/>';
+      h += '<text x="' + sx(k) + '" y="' + (H - B + 18) + '" text-anchor="middle" font-size="13">' + k + "</text>";
+      h += '<text x="' + (L - 12) + '" y="' + (sy(k) + 4) + '" text-anchor="middle" font-size="13">' + k + "</text>";
+    }
+    h += '<text x="' + ((L + W - R) / 2) + '" y="' + (H - 6) + '" text-anchor="middle" font-size="12">Cote de départ (1 = le plus rapide)</text>';
+    h += '<text transform="translate(12 ' + ((T + H - B) / 2) + ') rotate(-90)" text-anchor="middle" font-size="12">Cote de vitesse (1 = le plus rapide)</text>';
+    var groups = {};
+    pts.forEach(function (p) { var k = p.x + "," + p.y; (groups[k] = groups[k] || []).push(p); });
+    Object.keys(groups).forEach(function (k) {
+      var g = groups[k], m = g.length;
+      g.forEach(function (p, i) {
+        var cx = sx(p.x) + (i - (m - 1) / 2) * 11, cy = sy(p.y);
+        h += '<circle cx="' + cx + '" cy="' + cy + '" r="6" fill="' + (p.color || "#3d7cff") + '" stroke="#fff" stroke-width="2"/>';
+        if (withNames && p.name) h += '<text class="nm" x="' + (cx + 8) + '" y="' + (cy - 7 - i * 11) + '">' + esc(p.name) + "</text>";
+      });
+    });
+    return h + "</svg>";
+  }
+  function renderPlots() {
+    var pts = [];
+    results.forEach(function (r, i) { var a = coteRT(r), b = coteSp(r); if (a != null && b != null) pts.push({ x: a, y: b, name: r.name, color: color(i) }); });
+    $("plotClass").innerHTML = pts.length ? plotSvg(pts, true) : '<p class="soft">Le nuage apparaît dès que 2 coureurs ont terminé.</p>';
+    $("plotAdults").innerHTML = plotSvg(ADULTS.map(function (p) { return { x: p[0], y: p[1], color: "#8b5cf6" }; }), false);
+  }
 
   // ---------- Cotes par quintiles ----------
   var grid = { rt: null, sp: null };
   function quant(s, p) { var i = (s.length - 1) * p, lo = Math.floor(i), hi = Math.ceil(i); return s[lo] + (s[hi] - s[lo]) * (i - lo); }
+  var NC = 7; // nombre de cotes
+  var STEPS = [1, 2, 3, 4, 5, 6].map(function (k) { return k / NC; });
   function computeGrid() {
     var fin = results.filter(done);
     if (fin.length < 2) { grid = { rt: null, sp: null }; return; }
     var rts = fin.map(rt).sort(function (a, b) { return a - b; });
+    grid.rt = STEPS.map(function (p) { return Math.round(quant(rts, p)); });
     var sps = fin.map(cad1).sort(function (a, b) { return a - b; });
-    grid.rt = [.2, .4, .6, .8].map(function (p) { return Math.round(quant(rts, p)); });
-    grid.sp = [.8, .6, .4, .2].map(function (p) { return Math.round(quant(sps, p) * 10) / 10; });
+    grid.sp = STEPS.map(function (p) { return Math.round(quant(sps, 1 - p) * 10) / 10; });
   }
-  function coteRT(r) { if (!grid.rt || !done(r)) return null; var v = rt(r); for (var i = 0; i < 4; i++) if (v <= grid.rt[i]) return i + 1; return 5; }
-  function coteSp(r) { if (!grid.sp || !done(r)) return null; var v = cad1(r); for (var i = 0; i < 4; i++) if (v >= grid.sp[i]) return i + 1; return 5; }
+  function coteRT(r) { if (!grid.rt || !done(r)) return null; var v = rt(r); for (var i = 0; i < NC - 1; i++) if (v <= grid.rt[i]) return i + 1; return NC; }
+  function coteSp(r) { if (!grid.sp || !done(r)) return null; var v = cad1(r); for (var i = 0; i < NC - 1; i++) if (v >= grid.sp[i]) return i + 1; return NC; }
   function badge(c) { return c == null ? "—" : '<span class="cote c' + c + '">' + c + "</span>"; }
   function renderGrille() {
     if (!grid.rt) { $("grille").innerHTML = '<p class="soft">Les cotes apparaissent dès que 2 coureurs ont terminé.</p>'; return; }
     var g = grid.rt, s = grid.sp;
     function row(c, t) { return '<div class="g-row">' + badge(c) + "<span>" + t + "</span></div>"; }
     var a = "<h3>Cotes du départ</h3>" + row(1, "jusqu'à " + g[0] + " ms");
-    for (var i = 1; i < 4; i++) a += row(i + 1, g[i - 1] >= g[i] ? g[i] + " ms" : "de " + (g[i - 1] + 1) + " à " + g[i] + " ms");
-    a += row(5, "plus de " + g[3] + " ms");
+    for (var i = 1; i < NC - 1; i++) a += row(i + 1, g[i - 1] >= g[i] ? g[i] + " ms" : "de " + (g[i - 1] + 1) + " à " + g[i] + " ms");
+    a += row(NC, "plus de " + g[NC - 2] + " ms");
     var b = "<h3>Cotes de la vitesse</h3>" + row(1, fmt(s[0], 1) + " f/s et plus");
-    for (var j = 1; j < 4; j++) { var top = Math.round((s[j - 1] - .1) * 10) / 10; b += row(j + 1, top <= s[j] ? fmt(s[j], 1) + " f/s" : "de " + fmt(s[j], 1) + " à " + fmt(top, 1) + " f/s"); }
-    b += row(5, "moins de " + fmt(s[3], 1) + " f/s");
+    for (var j = 1; j < NC - 1; j++) { var top = Math.round((s[j - 1] - .1) * 10) / 10; b += row(j + 1, top <= s[j] ? fmt(s[j], 1) + " f/s" : "de " + fmt(s[j], 1) + " à " + fmt(top, 1) + " f/s"); }
+    b += row(NC, "moins de " + fmt(s[NC - 2], 1) + " f/s");
     $("grille").innerHTML = '<div class="g">' + a + '</div><div class="g">' + b + "</div>";
   }
   function renderTable() {
@@ -457,7 +551,7 @@ td:last-child { border-radius: 0 14px 14px 0; }
     tb.innerHTML = results.map(function (r) {
       return "<tr>" +
         "<td>" + esc(r.name) + "</td>" +
-        "<td>" + (done(r) ? rt(r) + ' <span class="unit">ms</span>' : "—") + "</td>" +
+        "<td>" + (done(r) ? dep(r) + ' <span class="unit">ms</span>' : "—") + "</td>" +
         "<td>" + badge(coteRT(r)) + "</td>" +
         '<td class="sep"></td>' +
         "<td>" + (done(r) ? fmt(cadence(r), 1) + ' <span class="unit">f/s</span>' : "—") + "</td>" +
@@ -476,6 +570,18 @@ td:last-child { border-radius: 0 14px 14px 0; }
     this.textContent = open ? "Masquer les données et cotes" : "Rendre visibles les données et cotes";
     this.setAttribute("aria-expanded", open ? "true" : "false");
     if (open) card.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+  $("plotBtn").addEventListener("click", function () {
+    var card = $("plotCard"), open = card.hidden;
+    card.hidden = !open;
+    this.textContent = open ? "Masquer le nuage de points" : "Voir le nuage de points";
+    this.setAttribute("aria-expanded", open ? "true" : "false");
+    if (open) card.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+  $("adultBtn").addEventListener("click", function () {
+    var box = $("adultBox"), open = box.hidden;
+    box.hidden = !open;
+    this.textContent = open ? "Masquer le nuage de mes collègues" : "Comparer avec mes collègues";
   });
   var armedAll = false;
   $("clearAll").addEventListener("click", function () {
@@ -529,7 +635,7 @@ td:last-child { border-radius: 0 14px 14px 0; }
     lanes.forEach(function (L, i) {
       L.run.style.transform = "translateX(" + Math.round(posAt(L.r, t) * L.w) + "px)";
       var first = rt(L.r);
-      if (first != null && t >= first && !L.started) { L.started = true; L.tag.textContent = first + " ms"; L.tag.hidden = false; if (i === best) L.el.classList.add("best"); }
+      if (first != null && t >= first && !L.started) { L.started = true; L.tag.textContent = dep(L.r) + " ms"; L.tag.hidden = false; if (i === best) L.el.classList.add("best"); }
       var s = speedAt(L.r, t);
       if (s != null) { L.bar.style.width = Math.min(100, s / 10 * 75) + "%"; L.num.textContent = fmt(s, 1); } else { L.bar.style.width = "0"; L.num.textContent = ""; }
       var arr = arrival(L.r);
@@ -566,7 +672,7 @@ td:last-child { border-radius: 0 14px 14px 0; }
       else if (t < startEnd) { rate = 1 / 10; setMode("Départ au super ralenti", true); }
       else { rate = 1 / 3; setMode("Ralenti", false); }
       t += dt * rate;
-      if (!p1 && t >= startEnd) { t = startEnd; drawAt(t); p1 = true; if (bi >= 0) { pause("⭐ Meilleur départ : " + list[bi].name + "! Parti·e " + rt(list[bi]) + " ms après la lumière.", go); return; } }
+      if (!p1 && t >= startEnd) { t = startEnd; drawAt(t); p1 = true; if (bi >= 0) { pause("⭐ Meilleur départ : " + list[bi].name + "! Parti·e " + dep(list[bi]) + " ms après la lumière.", go); return; } }
       if (!p2 && t >= midT) {
         t = midT; drawAt(t); p2 = true;
         if (fi >= 0) { lanes[fi].el.classList.add("fast"); pause("⚡ Le plus rapide : " + list[fi].name + "! " + fmt(cadence(list[fi]), 1) + " foulées par seconde." + (fi !== bi ? " Ce n'est pas le meilleur départ!" : ""), go); return; }
