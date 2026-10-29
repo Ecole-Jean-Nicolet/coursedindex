@@ -440,17 +440,18 @@ td:last-child { border-radius: 0 14px 14px 0; }
     melanie: "icimelanie000000",
     simon: "icisimon000000",
     chantal1: "icichantal000000",
-    je: "icije3000000", je3: "icije3000000"
+    je: "icije3000000", je3: "icije3000000",
+    amos: "iciamos000000"
   };
   function routeByName(classe, n) {
     var key = norm(n).replace(/[^a-z0-9]/g, ""), boardId = BOARD_RUNNERS[key];
     var rec = boardId && ((lists && lists[0]) || []).filter(function (r) { return r.id === boardId; })[0];
     if (rec) panelReturning(classe, rec.name);
-    else panelNew(classe, n);
+    else panelNew(classe, n); // nouvelle personne : test 1, puis test 2 (sans la course)
   }
-  function panelReturning(classe, n) {
+  function panelReturning(classe, n, isNew) {
     var p = panel("<h2>Merci et bravo à tous les participants!</h2>" +
-      "<p>Bon retour, " + esc(n) + "! Tu as déjà fait la course. Viens voir les résultats de la grande course!</p>" +
+      "<p>" + (isNew ? "Bienvenue, " + esc(n) + "! La course est terminée. Viens voir les résultats de la grande course!" : "Bon retour, " + esc(n) + "! Tu as déjà fait la course. Viens voir les résultats de la grande course!") + "</p>" +
       '<div><a class="linkbtn" href="course-collegues.html">Voir les résultats de la course</a></div>' +
       '<h2 style="margin-top:8px">Voici le deuxième test</h2>' +
       '<div class="rules"><h3>Les règles du test 2 : les cibles</h3><ol><li>Pose le téléphone à plat sur la table, <b>couché à l\'horizontale</b>.</li><li>Touche la <b>cible bleue</b> pour commencer : le chrono part à ce moment-là. Il n\'y a pas de lumière à attendre.</li><li>Touche ensuite la <b>cible allumée</b> : droite, gauche, droite… <b>30 fois, le plus vite possible</b>.</li><li>Seule la cible allumée compte. Un toucher à côté ne fait pas avancer le compteur.</li><li><b>Un seul doigt</b> : l\'index.</li><li>Tu fais <b>3 essais</b>. Les 2 premiers servent à pratiquer, <b>seul le 3e compte</b>.</li></ol><p class="soft">Un essai est refusé, et tu le recommences, si tu utilises plus d\'un doigt ou s\'il dure plus de 15 secondes.</p></div>' +
