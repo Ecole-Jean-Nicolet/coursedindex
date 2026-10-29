@@ -144,12 +144,17 @@ td:last-child { border-radius: 0 14px 14px 0; }
 .s2-top .tr { font-family: var(--fun); font-weight: 600; color: var(--soft); }
 .s2-top button { padding: 8px 16px; font-size: .9rem; }
 .s2-field { position: relative; display: grid; place-items: center; }
-.pair { position: relative; width: 530px; height: 150px; max-width: 100%; } /* 2 cibles de 150 px, centres à 380 px : tient sur les plus petits téléphones couchés */
-.tg { position: absolute; top: 0; width: 150px; height: 150px; border-radius: 50%; display: grid; place-items: center; font-family: var(--fun); font-weight: 700; font-size: 2.2rem; color: #fff; opacity: .28; transition: opacity .08s, transform .08s; }
+.pair { position: relative; width: 500px; height: 140px; } /* 2 cibles de 140 px, centres à 360 px, sur le long côté de l'écran */
+.tg { position: absolute; top: 0; width: 140px; height: 140px; border-radius: 50%; display: grid; place-items: center; font-family: var(--fun); font-weight: 700; font-size: 2.2rem; color: #fff; opacity: .28; transition: opacity .08s, transform .08s; }
 .tg.l { left: 0; background: var(--blue); }
 .tg.r { right: 0; background: var(--pink); }
 .tg.on { opacity: 1; transform: scale(1.06); box-shadow: 0 0 0 8px rgba(255,201,40,.55); }
 .tg.hit { transform: scale(.92); }
+@media (orientation: portrait) {
+  .pair { width: 140px; height: 500px; }
+  .tg.r { right: auto; left: 0; top: auto; bottom: 0; }
+}
+.s2-field { overflow: hidden; }
 .s2-field.done .pair { display: none; }
 .s2-field.done .s2-msg { position: static; }
 #s2Rotate { position: absolute; inset: 0; z-index: 5; background: #fffdf5; display: grid; place-items: center; text-align: center; padding: 24px; }
@@ -309,7 +314,7 @@ td:last-child { border-radius: 0 14px 14px 0; }
   <div id="s2Rotate" hidden><div style="display:grid;gap:12px;justify-items:center"><div class="ico" aria-hidden="true">⟳</div><div class="big">Tourne ton téléphone à l'horizontale</div><div class="sub">Le test des cibles se fait avec l'écran couché. Si l'écran ne tourne pas, désactive le verrouillage de la rotation.</div></div></div>
   <div class="s2-top"><span class="tr" id="s2Trial">Essai 1 sur 3</span><button type="button" id="s2Quit">Quitter</button></div>
   <div class="s2-field">
-    <div class="pair"><div class="tg l" id="tL">◀</div><div class="tg r" id="tR">▶</div></div>
+    <div class="pair"><div class="tg l" id="tL"></div><div class="tg r" id="tR"></div></div>
     <div class="s2-msg" id="s2Msg"></div>
   </div>
   <div class="s2-count"><div><b id="s2N">0</b> / 30</div><div class="s2-bar"><div class="s2-fill" id="s2Fill"></div></div></div>
@@ -454,7 +459,7 @@ td:last-child { border-radius: 0 14px 14px 0; }
       "<p>" + (isNew ? "Bienvenue, " + esc(n) + "! La course est terminée. Viens voir les résultats de la grande course!" : "Bon retour, " + esc(n) + "! Tu as déjà fait la course. Viens voir les résultats de la grande course!") + "</p>" +
       '<div><a class="linkbtn" href="course-collegues.html">Voir les résultats de la course</a></div>' +
       '<h2 style="margin-top:8px">Voici le deuxième test</h2>' +
-      '<div class="rules"><h3>Les règles du test 2 : les cibles</h3><ol><li>Pose le téléphone à plat sur la table, <b>couché à l\'horizontale</b>.</li><li>Touche la <b>cible bleue</b> pour commencer : le chrono part à ce moment-là. Il n\'y a pas de lumière à attendre.</li><li>Touche ensuite la <b>cible allumée</b> : droite, gauche, droite… <b>30 fois, le plus vite possible</b>.</li><li>Seule la cible allumée compte. Un toucher à côté ne fait pas avancer le compteur.</li><li><b>Un seul doigt</b> : l\'index.</li><li>Tu fais <b>3 essais</b>. Les 2 premiers servent à pratiquer, <b>seul le 3e compte</b>.</li></ol><p class="soft">Un essai est refusé, et tu le recommences, si tu utilises plus d\'un doigt ou s\'il dure plus de 15 secondes.</p></div>' +
+      '<div class="rules"><h3>Les règles du test 2 : les cibles</h3><ol><li>Pose le téléphone à plat sur la table, <b>tourné sur le côté</b> : une cible à gauche, une à droite.</li><li>Touche la <b>cible bleue</b> pour commencer : le chrono part à ce moment-là. Il n\'y a pas de lumière à attendre.</li><li>Touche ensuite la <b>cible allumée</b> : droite, gauche, droite… <b>30 fois, le plus vite possible</b>.</li><li>Seule la cible allumée compte. Un toucher à côté ne fait pas avancer le compteur.</li><li><b>Un seul doigt</b> : l\'index.</li><li>Tu fais <b>3 essais</b>. Les 2 premiers servent à pratiquer, <b>seul le 3e compte</b>.</li></ol><p class="soft">Un essai est refusé, et tu le recommences, si tu utilises plus d\'un doigt ou s\'il dure plus de 15 secondes.</p></div>' +
       '<div><button class="btn-go" type="button" id="go2">Commencer le test 2</button></div>');
     p.querySelector("#go2").addEventListener("click", function () { runCibles(n); });
   }
@@ -466,7 +471,7 @@ td:last-child { border-radius: 0 14px 14px 0; }
   }
   function panelTest2Intro(n) {
     var p = panel("<h2>Bravo! Maintenant, le test 2</h2>" +
-      '<div class="rules"><h3>Les règles du test 2 : les cibles</h3><ol><li>Pose le téléphone à plat sur la table, <b>couché à l\'horizontale</b>.</li><li>Touche la <b>cible bleue</b> pour commencer : le chrono part à ce moment-là. Il n\'y a pas de lumière à attendre.</li><li>Touche ensuite la <b>cible allumée</b> : droite, gauche, droite… <b>30 fois, le plus vite possible</b>.</li><li>Seule la cible allumée compte. Un toucher à côté ne fait pas avancer le compteur.</li><li><b>Un seul doigt</b> : l\'index.</li><li>Tu fais <b>3 essais</b>. Les 2 premiers servent à pratiquer, <b>seul le 3e compte</b>.</li></ol><p class="soft">Un essai est refusé, et tu le recommences, si tu utilises plus d\'un doigt ou s\'il dure plus de 15 secondes.</p></div>' +
+      '<div class="rules"><h3>Les règles du test 2 : les cibles</h3><ol><li>Pose le téléphone à plat sur la table, <b>tourné sur le côté</b> : une cible à gauche, une à droite.</li><li>Touche la <b>cible bleue</b> pour commencer : le chrono part à ce moment-là. Il n\'y a pas de lumière à attendre.</li><li>Touche ensuite la <b>cible allumée</b> : droite, gauche, droite… <b>30 fois, le plus vite possible</b>.</li><li>Seule la cible allumée compte. Un toucher à côté ne fait pas avancer le compteur.</li><li><b>Un seul doigt</b> : l\'index.</li><li>Tu fais <b>3 essais</b>. Les 2 premiers servent à pratiquer, <b>seul le 3e compte</b>.</li></ol><p class="soft">Un essai est refusé, et tu le recommences, si tu utilises plus d\'un doigt ou s\'il dure plus de 15 secondes.</p></div>' +
       '<div><button class="btn-go" type="button" id="go2">Commencer le test 2</button></div>');
     p.querySelector("#go2").addEventListener("click", function () { runCibles(n); });
   }
@@ -481,7 +486,7 @@ td:last-child { border-radius: 0 14px 14px 0; }
   function c2Count() { $("s2N").textContent = C2.hits.length; $("s2Fill").style.width = (C2.hits.length / C2.goal * 100) + "%"; }
   function runCibles(n) { C2.name = n; C2.trial = 0; C2.sent = false; c2Open(); }
   function c2Portrait() { return window.innerHeight > window.innerWidth; }
-  function c2CheckOrient() { $("s2Rotate").hidden = !c2Portrait() || stage2.hidden; }
+  function c2CheckOrient() { $("s2Rotate").hidden = true; } // plus de blocage : les cibles suivent le long côté de l'écran
   window.addEventListener("resize", c2CheckOrient);
   window.addEventListener("orientationchange", function () { setTimeout(c2CheckOrient, 200); });
   function c2Open() {
@@ -489,7 +494,7 @@ td:last-child { border-radius: 0 14px 14px 0; }
     stage2.hidden = false; C2.phase = "ready"; C2.hits = []; C2.multi = false; C2.down = {};
     $("s2Trial").textContent = "Test 2 · essai " + (C2.trial + 1) + " sur " + C2.trials + (C2.trial + 1 < C2.trials ? " (pratique)" : " (celui qui compte!)");
     c2Target("L"); c2Count();
-    s2Msg.innerHTML = '<div class="big">Touche la cible bleue pour commencer</div><div class="sub">Le chrono part à ton premier toucher.</div>';
+    s2Msg.innerHTML = '<div class="big">Touche la cible bleue pour commencer</div><div class="sub">' + (c2Portrait() ? "Astuce : tourne ton téléphone sur la table, une cible à gauche et une à droite." : "Le chrono part à ton premier toucher.") + "</div>";
     c2CheckOrient();
   }
   function c2Close() { C2.phase = "off"; stage2.hidden = true; $("s2Rotate").hidden = true; if (C2.sent) panelDone(C2.name, false); }
@@ -498,7 +503,6 @@ td:last-child { border-radius: 0 14px 14px 0; }
     if (e.target.closest("button")) return;
     e.preventDefault();
     if (C2.phase !== "ready" && C2.phase !== "go") return;
-    if (c2Portrait()) return; // on attend que le téléphone soit à l'horizontale
     var t = performance.now();
     if (Object.keys(C2.down).length > 0 || (C2.hits.length && t - C2.hits[C2.hits.length - 1] < MIN_GAP_MS)) C2.multi = true;
     C2.down[e.pointerId] = true;
