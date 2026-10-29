@@ -137,6 +137,57 @@ td:last-child { border-radius: 0 14px 14px 0; }
 /* Élève */
 .rule { background: #fff4c7; border-radius: 16px; padding: 12px 16px; font-weight: 800; }
 
+/* Test 2 : cibles alternées */
+#stage2 { position: fixed; inset: 0; background: #fffdf5; z-index: 50; display: grid; grid-template-rows: auto 1fr auto; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+  padding: calc(14px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) calc(18px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.s2-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.s2-top .tr { font-family: var(--fun); font-weight: 600; color: var(--soft); }
+.s2-top button { padding: 8px 16px; font-size: .9rem; }
+.s2-field { position: relative; display: grid; place-items: center; }
+.pair { position: relative; width: 530px; height: 150px; max-width: 100%; } /* 2 cibles de 150 px, centres à 380 px : tient sur les plus petits téléphones couchés */
+.tg { position: absolute; top: 0; width: 150px; height: 150px; border-radius: 50%; display: grid; place-items: center; font-family: var(--fun); font-weight: 700; font-size: 2.2rem; color: #fff; opacity: .28; transition: opacity .08s, transform .08s; }
+.tg.l { left: 0; background: var(--blue); }
+.tg.r { right: 0; background: var(--pink); }
+.tg.on { opacity: 1; transform: scale(1.06); box-shadow: 0 0 0 8px rgba(255,201,40,.55); }
+.tg.hit { transform: scale(.92); }
+.s2-field.done .pair { display: none; }
+.s2-field.done .s2-msg { position: static; }
+#s2Rotate { position: absolute; inset: 0; z-index: 5; background: #fffdf5; display: grid; place-items: center; text-align: center; padding: 24px; }
+#s2Rotate .ico { font-size: 4rem; line-height: 1; color: var(--pink); }
+#s2Rotate .big { font-family: var(--fun); font-weight: 700; font-size: clamp(1.6rem, 6vw, 2.2rem); line-height: 1.05; }
+#s2Rotate .sub { color: var(--soft); font-weight: 800; max-width: 30ch; }
+.s2-msg { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(200px, 60%); text-align: center; display: grid; gap: 8px; justify-items: center; pointer-events: none; }
+.s2-field.done .s2-msg { width: auto; transform: none; pointer-events: auto; }
+.s2-msg .big { font-family: var(--fun); font-weight: 700; font-size: clamp(1.6rem, 6vw, 2.2rem); line-height: 1.05; }
+.s2-msg .sub { color: var(--soft); font-weight: 800; }
+.s2-msg .sent.ok { color: var(--green); font-weight: 800; }
+.s2-msg .sent.bad { color: var(--pink); font-weight: 800; }
+.s2-count { text-align: center; font-family: var(--fun); font-weight: 700; font-size: 1.3rem; }
+.s2-count b { font-size: clamp(3rem, 14vw, 4.6rem); color: var(--pink); line-height: 1; }
+.s2-bar { height: 12px; border-radius: 6px; background: var(--line); overflow: hidden; margin-top: 6px; }
+.s2-fill { height: 100%; width: 0; background: linear-gradient(90deg, var(--blue), var(--pink)); }
+.s2-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; width: min(100%, 360px); }
+.s2-tiles div { border-radius: 16px; padding: 10px; color: #fff; text-align: center; }
+.s2-tiles span { display: block; font-weight: 800; font-size: .8rem; }
+.s2-tiles b { font-family: var(--fun); font-size: 1.6rem; }
+.panel { display: grid; gap: 14px; }
+.rules { background: #f6faff; border-radius: 18px; padding: 14px 16px; display: grid; gap: 8px; }
+.rules h3 { margin: 0; font-family: var(--fun); font-weight: 600; font-size: 1.15rem; }
+.rules ol { margin: 0; padding-left: 1.4em; display: grid; gap: 6px; font-weight: 700; }
+.rules b { color: var(--pink); }
+.panel h2 { font-size: 1.6rem; }
+.linkbtn { display: inline-block; text-decoration: none; font-family: var(--fun); font-weight: 600; font-size: 1.05rem; border-radius: 999px; padding: 12px 22px; background: var(--sun); color: var(--ink); box-shadow: 0 4px 0 #d9a800; }
+
+/* Test 2 à l'horizontale sur téléphone : tout plus compact, consignes au-dessus des cibles */
+@media (orientation: landscape) and (max-height: 520px) {
+  #stage2 .s2-count { font-size: 1rem; }
+  #stage2 .s2-count b { font-size: 2.2rem; }
+  #stage2 .s2-bar { height: 8px; }
+  #stage2 .s2-msg .big { font-size: 1.4rem; }
+  #stage2 .s2-msg .sub { font-size: .9rem; }
+  #stage2 .s2-tiles b { font-size: 1.3rem; }
+}
+
 /* Écran de test */
 #stage { position: fixed; inset: 0; background: var(--night); color: #fff; z-index: 50; display: grid; place-items: center;
   touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; overflow: hidden;
@@ -174,13 +225,21 @@ td:last-child { border-radius: 0 14px 14px 0; }
   <div class="card">
     <div class="rainbow" aria-hidden="true"><i style="background:var(--pink)"></i><i style="background:var(--orange)"></i><i style="background:var(--sun)"></i><i style="background:var(--green)"></i><i style="background:var(--blue)"></i><i style="background:var(--purple)"></i></div>
     <h1>Course de 30 foulées</h1>
-    <p class="soft">Quand la lumière s'allume, tapote 30 fois le plus vite possible.</p>
-    <p class="rule">Un seul doigt : l'index. Le téléphone posé sur la table.<br>Ne compte pas : l'écran compte pour toi!</p>
+    <p class="soft">Deux petits tests de vitesse. Écris ton prénom, puis suis les règles.</p>
+    <div class="rules"><h3>Les règles du test 1 : la course</h3><ol>
+<li>Pose le téléphone à plat sur la table.</li>
+<li>Touche l'écran pour te placer, puis <b>attends la lumière sans toucher</b>.</li>
+<li>Dès que la lumière s'allume, tapote n'importe où sur l'écran, <b>30 fois, le plus vite possible</b>.</li>
+<li><b>Un seul doigt</b> : l'index.</li>
+<li>Ne compte pas : l'écran compte pour toi.</li>
+<li>Tu fais <b>3 essais</b>. Les 2 premiers servent à pratiquer, <b>seul le 3e compte</b>.</li>
+</ol><p class="soft">Un essai est refusé, et tu le recommences, si tu touches avant la lumière, si tu pars plus d'une seconde après la lumière ou si tu utilises plus d'un doigt.</p></div>
     <form class="field" id="stForm">
       <input type="text" id="stName" maxlength="30" autocomplete="off" placeholder="Ton prénom" aria-label="Ton prénom">
       <button class="btn-go" type="submit">Je suis prêt·e!</button>
     </form>
   </div>
+  <div class="card panel" id="stPanel" hidden></div>
 </main>
 
 <!-- ============ TABLEAU ============ -->
@@ -244,6 +303,17 @@ td:last-child { border-radius: 0 14px 14px 0; }
     <div class="tools"><button type="button" class="link" id="adultBtn">Comparer avec mes collègues</button></div>
   </div>
 </main>
+
+<!-- ============ TEST 2 : CIBLES ============ -->
+<div id="stage2" hidden>
+  <div id="s2Rotate" hidden><div style="display:grid;gap:12px;justify-items:center"><div class="ico" aria-hidden="true">⟳</div><div class="big">Tourne ton téléphone à l'horizontale</div><div class="sub">Le test des cibles se fait avec l'écran couché. Si l'écran ne tourne pas, désactive le verrouillage de la rotation.</div></div></div>
+  <div class="s2-top"><span class="tr" id="s2Trial">Essai 1 sur 3</span><button type="button" id="s2Quit">Quitter</button></div>
+  <div class="s2-field">
+    <div class="pair"><div class="tg l" id="tL">◀</div><div class="tg r" id="tR">▶</div></div>
+    <div class="s2-msg" id="s2Msg"></div>
+  </div>
+  <div class="s2-count"><div><b id="s2N">0</b> / 30</div><div class="s2-bar"><div class="s2-fill" id="s2Fill"></div></div></div>
+</div>
 
 <!-- ============ ÉCRAN DE TEST ============ -->
 <div id="stage" hidden>
@@ -326,6 +396,11 @@ td:last-child { border-radius: 0 14px 14px 0; }
   // =====================================================
   // ÉLÈVE
   // =====================================================
+  var KEY2 = "CIBLES"; // résultats du test 2, rangés à part
+  function norm(x) { return String(x).normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase(); }
+  function panel(html) { $("stForm").parentNode.hidden = true; var p = $("stPanel"); p.hidden = false; p.innerHTML = html; window.scrollTo(0, 0); return p; }
+  // Une personne = un téléphone (le prénom tapé peut varier d'une fois à l'autre)
+  function myId() { return deviceId(); }
   function startStudent(classe) {
     $("viewStudent").hidden = false;
     try { var saved = localStorage.getItem("course30.name"); if (saved) $("stName").value = saved; } catch (e) {}
@@ -334,9 +409,135 @@ td:last-child { border-radius: 0 14px 14px 0; }
       var n = $("stName").value.trim().slice(0, 30);
       if (!n) { $("stName").focus(); $("stName").placeholder = "Écris d'abord ton prénom"; return; }
       try { localStorage.setItem("course30.name", n); } catch (e2) {}
-      runTest(n, function (res) { return function (el) { sendResult(classe, { id: PREVIEW ? nameId(n) : deviceId(), name: n, taps: res.taps }, el); }; }, null);
+      routeByName(classe, n);
+    });
+    routeByPhone(classe);
+  }
+  // 1) On reconnaît d'abord le téléphone, avant même de demander le prénom
+  var lists = null;
+  function routeByPhone(classe) {
+    $("stForm").parentNode.hidden = true;
+    panel('<h2>Un instant…</h2><p class="soft">On regarde si tu as déjà participé.</p>');
+    Promise.all([store.list(classe), store.list(KEY2)]).then(function (ls) {
+      lists = ls;
+      var id = myId();
+      var r2 = (ls[1] || []).filter(function (r) { return r.id === id; })[0];
+      var r1 = (ls[0] || []).filter(function (r) { return r.id === id; })[0];
+      if (r2) panelDone(r2.name, true);
+      else if (r1) panelReturning(classe, r1.name);
+      else { $("stPanel").hidden = true; $("stForm").parentNode.hidden = false; }
+    }).catch(function () {
+      var p = panel('<h2>Connexion impossible</h2><p class="soft">Vérifie le réseau, puis réessaie.</p><div><button class="btn-go" type="button" id="retry">Réessayer</button></div>');
+      p.querySelector("#retry").addEventListener("click", function () { routeByPhone(classe); });
     });
   }
+  // 2) Téléphone inconnu : nouvelle personne, elle fait les deux tests.
+  // Seule exception : les personnes qui ont fait la course au tableau, reconnues par un prénom convenu.
+  var BOARD_RUNNERS = {
+    audrey: "iciaudrey000000",
+    leia: "icileia000000", leila: "icileia000000",
+    lp: "icilp2000000", lp2: "icilp2000000",
+    melanie: "icimelanie000000",
+    simon: "icisimon000000",
+    chantal1: "icichantal000000",
+    je: "icije3000000", je3: "icije3000000"
+  };
+  function routeByName(classe, n) {
+    var key = norm(n).replace(/[^a-z0-9]/g, ""), boardId = BOARD_RUNNERS[key];
+    var rec = boardId && ((lists && lists[0]) || []).filter(function (r) { return r.id === boardId; })[0];
+    if (rec) panelReturning(classe, rec.name);
+    else panelNew(classe, n);
+  }
+  function panelReturning(classe, n) {
+    var p = panel("<h2>Merci et bravo à tous les participants!</h2>" +
+      "<p>Bon retour, " + esc(n) + "! Tu as déjà fait la course. Viens voir les résultats de la grande course!</p>" +
+      '<div><a class="linkbtn" href="course-collegues.html">Voir les résultats de la course</a></div>' +
+      '<h2 style="margin-top:8px">Voici le deuxième test</h2>' +
+      '<div class="rules"><h3>Les règles du test 2 : les cibles</h3><ol><li>Pose le téléphone à plat sur la table, <b>couché à l\'horizontale</b>.</li><li>Touche la <b>cible bleue</b> pour commencer : le chrono part à ce moment-là. Il n\'y a pas de lumière à attendre.</li><li>Touche ensuite la <b>cible allumée</b> : droite, gauche, droite… <b>30 fois, le plus vite possible</b>.</li><li>Seule la cible allumée compte. Un toucher à côté ne fait pas avancer le compteur.</li><li><b>Un seul doigt</b> : l\'index.</li><li>Tu fais <b>3 essais</b>. Les 2 premiers servent à pratiquer, <b>seul le 3e compte</b>.</li></ol><p class="soft">Un essai est refusé, et tu le recommences, si tu utilises plus d\'un doigt ou s\'il dure plus de 15 secondes.</p></div>' +
+      '<div><button class="btn-go" type="button" id="go2">Commencer le test 2</button></div>');
+    p.querySelector("#go2").addEventListener("click", function () { runCibles(n); });
+  }
+  function panelNew(classe, n) {
+    var sent = false;
+    panel("<h2>Test 1 : la course</h2><p class=\"soft\">Fais tes 3 essais. Ensuite, tu passeras au test 2.</p>");
+    runTest(n, function (res) { return function (el) { sendResult(classe, { id: myId(), name: n, taps: res.taps }, el, function () { sent = true; }); }; },
+      function () { if (sent) panelTest2Intro(n); else { $("stPanel").hidden = true; $("stForm").parentNode.hidden = false; } });
+  }
+  function panelTest2Intro(n) {
+    var p = panel("<h2>Bravo! Maintenant, le test 2</h2>" +
+      '<div class="rules"><h3>Les règles du test 2 : les cibles</h3><ol><li>Pose le téléphone à plat sur la table, <b>couché à l\'horizontale</b>.</li><li>Touche la <b>cible bleue</b> pour commencer : le chrono part à ce moment-là. Il n\'y a pas de lumière à attendre.</li><li>Touche ensuite la <b>cible allumée</b> : droite, gauche, droite… <b>30 fois, le plus vite possible</b>.</li><li>Seule la cible allumée compte. Un toucher à côté ne fait pas avancer le compteur.</li><li><b>Un seul doigt</b> : l\'index.</li><li>Tu fais <b>3 essais</b>. Les 2 premiers servent à pratiquer, <b>seul le 3e compte</b>.</li></ol><p class="soft">Un essai est refusé, et tu le recommences, si tu utilises plus d\'un doigt ou s\'il dure plus de 15 secondes.</p></div>' +
+      '<div><button class="btn-go" type="button" id="go2">Commencer le test 2</button></div>');
+    p.querySelector("#go2").addEventListener("click", function () { runCibles(n); });
+  }
+  function panelDone(n, already) {
+    panel("<h2>Merci " + esc(n) + "!</h2><p>" + (already ? "Tu as déjà fait les deux tests. " : "Tu as terminé les deux tests. ") + "Merci beaucoup pour ta participation!</p>");
+  }
+
+  // ---------- Test 2 : cibles alternées (3 essais, seul le 3e est envoyé) ----------
+  var C2 = { goal: 30, trials: 3, trial: 0, phase: "off", next: "L", hits: [], multi: false, down: {}, name: "", sent: false };
+  var stage2 = $("stage2"), tL = $("tL"), tR = $("tR"), s2Msg = $("s2Msg");
+  function c2Target(side) { C2.next = side; tL.classList.toggle("on", side === "L"); tR.classList.toggle("on", side === "R"); }
+  function c2Count() { $("s2N").textContent = C2.hits.length; $("s2Fill").style.width = (C2.hits.length / C2.goal * 100) + "%"; }
+  function runCibles(n) { C2.name = n; C2.trial = 0; C2.sent = false; c2Open(); }
+  function c2Portrait() { return window.innerHeight > window.innerWidth; }
+  function c2CheckOrient() { $("s2Rotate").hidden = !c2Portrait() || stage2.hidden; }
+  window.addEventListener("resize", c2CheckOrient);
+  window.addEventListener("orientationchange", function () { setTimeout(c2CheckOrient, 200); });
+  function c2Open() {
+    $("stage2").querySelector(".s2-field").classList.remove("done");
+    stage2.hidden = false; C2.phase = "ready"; C2.hits = []; C2.multi = false; C2.down = {};
+    $("s2Trial").textContent = "Test 2 · essai " + (C2.trial + 1) + " sur " + C2.trials + (C2.trial + 1 < C2.trials ? " (pratique)" : " (celui qui compte!)");
+    c2Target("L"); c2Count();
+    s2Msg.innerHTML = '<div class="big">Touche la cible bleue pour commencer</div><div class="sub">Le chrono part à ton premier toucher.</div>';
+    c2CheckOrient();
+  }
+  function c2Close() { C2.phase = "off"; stage2.hidden = true; $("s2Rotate").hidden = true; if (C2.sent) panelDone(C2.name, false); }
+  function c2Inside(el, x, y) { var b = el.getBoundingClientRect(), cx = b.left + b.width / 2, cy = b.top + b.height / 2, r = b.width / 2 + 24; return (x - cx) * (x - cx) + (y - cy) * (y - cy) <= r * r; }
+  stage2.addEventListener("pointerdown", function (e) {
+    if (e.target.closest("button")) return;
+    e.preventDefault();
+    if (C2.phase !== "ready" && C2.phase !== "go") return;
+    if (c2Portrait()) return; // on attend que le téléphone soit à l'horizontale
+    var t = performance.now();
+    if (Object.keys(C2.down).length > 0 || (C2.hits.length && t - C2.hits[C2.hits.length - 1] < MIN_GAP_MS)) C2.multi = true;
+    C2.down[e.pointerId] = true;
+    var el = C2.next === "L" ? tL : tR;
+    if (c2Inside(el, e.clientX, e.clientY)) {
+      if (C2.phase === "ready") { C2.phase = "go"; s2Msg.innerHTML = ""; }
+      C2.hits.push(t); el.classList.add("hit"); setTimeout(function () { el.classList.remove("hit"); }, 80);
+      c2Count(); c2Target(C2.next === "L" ? "R" : "L");
+      if (C2.hits.length >= C2.goal) c2Finish();
+    }
+  });
+  function c2Up(e) { delete C2.down[e.pointerId]; }
+  stage2.addEventListener("pointerup", c2Up);
+  stage2.addEventListener("pointercancel", c2Up);
+  stage2.addEventListener("touchstart", function (e) { if (!e.target.closest("button")) e.preventDefault(); }, { passive: false });
+  stage2.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+  $("s2Quit").addEventListener("click", function (e) { e.stopPropagation(); c2Close(); });
+  function c2Btn(id, label, fn, cls) { return { html: '<button type="button" class="' + (cls || "btn-go") + '" id="' + id + '">' + label + "</button>", bind: function () { $(id).addEventListener("click", function (ev) { ev.stopPropagation(); fn(); }); } }; }
+  function c2Finish() {
+    C2.phase = "done"; tL.classList.remove("on"); tR.classList.remove("on");
+    $("stage2").querySelector(".s2-field").classList.add("done");
+    var taps = C2.hits.map(function (t) { return Math.round(t - C2.hits[0]); });
+    var dur = taps[taps.length - 1] / 1000, speed = (C2.goal - 1) / dur;
+    var invalid = C2.multi ? "Un seul doigt! On dirait que tu as utilisé plus d'un doigt." : dur > 14.9 ? "C'était un peu long. Essaie d'aller plus vite!" : null;
+    var b;
+    if (invalid) {
+      b = c2Btn("s2Again", "Recommencer", c2Open);
+      s2Msg.innerHTML = '<div class="big">Essai non valide</div><div class="sub">' + invalid + " Cet essai ne compte pas.</div>" + b.html; b.bind(); return;
+    }
+    C2.trial++;
+    var tiles = '<div class="s2-tiles"><div style="background:var(--blue)"><span>Temps</span><b>' + fmt(dur, 2) + ' s</b></div><div style="background:var(--pink)"><span>Vitesse</span><b>' + fmt(speed, 1) + "/s</b></div></div>";
+    if (C2.trial < C2.trials) {
+      b = c2Btn("s2Again", "Essai suivant", c2Open);
+      s2Msg.innerHTML = '<div class="big">Essai ' + C2.trial + " réussi!</div>" + tiles + '<div class="sub">Essai de pratique. Encore ' + (C2.trials - C2.trial) + "!</div>" + b.html; b.bind(); return;
+    }
+    b = c2Btn("s2Done", "Terminer", c2Close);
+    s2Msg.innerHTML = '<div class="big">Bravo!</div>' + tiles + '<p class="sent" id="s2Sent"></p>' + b.html; b.bind();
+    sendResult(KEY2, { id: myId(), name: C2.name, taps: taps }, $("s2Sent"), function () { C2.sent = true; });
+  }
+
 
   // =====================================================
   // ÉCRAN DE TEST
@@ -348,7 +549,7 @@ td:last-child { border-radius: 0 14px 14px 0; }
   function runTest(name, cb, closeCb) { onDone = cb; onClose = closeCb; trial = 0; openStage(name); }
   function openStage(name) {
     who = name; stage.hidden = false; lamp.hidden = true; lampOff.hidden = true; prog.hidden = true; phase = "ready";
-    show('<div class="sub" style="color:var(--sun);font-size:1.3rem">Essai ' + (trial + 1) + ' sur ' + TRIALS + (trial + 1 < TRIALS ? " (pratique)" : " (celui qui compte!)") + '</div><div class="big">' + esc(name) + ', à tes marques!</div><div class="sub">Un seul doigt : l\'index. Ne compte pas, l\'écran compte pour toi! Touche l\'écran pour te placer. Quand la lumière s\'allume, tapote le plus vite possible!</div>');
+    show('<div class="sub" style="color:var(--sun);font-size:1.3rem">Essai ' + (trial + 1) + ' sur ' + TRIALS + (trial + 1 < TRIALS ? " (pratique)" : " (celui qui compte!)") + '</div><div class="big">' + esc(name) + ', à tes marques!</div><div class="sub">Touche l\'écran pour te placer, puis attends la lumière. Quand elle s\'allume, tapote 30 fois le plus vite possible, avec ton index seulement. Ne compte pas!</div>');
   }
   function closeStage() { clearTimeout(waitTimer); clearTimeout(endTimer); phase = "off"; stage.hidden = true; lamp.hidden = true; lampOff.hidden = true; prog.hidden = true; if (onClose) onClose(); }
   function startWait() {
