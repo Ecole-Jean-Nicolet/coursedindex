@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="fr-CA">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Classe contre collègues</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Nunito:wght@600;800&display=swap">
+<style>
+/* Mise en page : un stade de nuit sur grand écran. Bandeau tableau d'affichage, piste de 50 couloirs fins à gauche, leaders en direct à droite. Thème unique sombre, voulu pour le projecteur. */
+:root {
+  --night: #0b1130;
+  --stand: #141c45;
+  --line: #2a3570;
+  --ink: #f3f5ff;
+  --soft: #9ba6d6;
+  --track: #b5462e;
+  --track-2: #a33f29;
+  --gold: #ffc928;
+  --mint: #3ee6a0;
+  --cl: #ff5c8a;
+  --co: #3d9bff;
+  --board: "Big Shoulders Display", "Arial Narrow", Impact, sans-serif;
+  --body: "Nunito", "Segoe UI", Arial, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--night); color: var(--ink); font-family: var(--body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 14px 24px; }
+.app { max-width: 1500px; margin: 0 auto; display: grid; gap: 14px; }
+.top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; }
+.title { display: grid; gap: 2px; }
+.kicker { font-weight: 800; font-size: .8rem; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); }
+h1 { margin: 0; font-family: var(--board); font-weight: 900; text-transform: uppercase; font-size: clamp(2rem, 5vw, 3.6rem); line-height: .9; }
+.score { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.lampS { width: 30px; height: 30px; border-radius: 50%; background: #26306a; border: 3px solid var(--line); }
+.lampS.on { background: var(--gold); border-color: var(--gold); box-shadow: 0 0 22px 8px rgba(255,201,40,.55); }
+.clock { font-family: var(--board); font-weight: 900; font-size: clamp(2.4rem, 5vw, 3.8rem); color: var(--gold); font-variant-numeric: tabular-nums; min-width: 4.2ch; line-height: 1; }
+.mode { font-weight: 800; font-size: .8rem; letter-spacing: .1em; text-transform: uppercase; color: var(--soft); min-width: 13ch; }
+.mode.hot { color: var(--gold); }
+button { font: inherit; font-weight: 800; border-radius: 999px; border: 2px solid var(--line); background: transparent; color: var(--ink); padding: 10px 20px; cursor: pointer; }
+button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.go { background: var(--gold); color: #1d1500; border-color: var(--gold); font-size: 1.1rem; padding: 12px 26px; }
+.btns { display: flex; flex-wrap: wrap; gap: 10px; }
+
+.stage { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 14px; }
+@media (max-width: 820px) { .stage { grid-template-columns: minmax(0, 1fr); } }
+.trackWrap { position: relative; background: var(--track); border-radius: 16px; padding: 10px 46px 10px 12px; min-width: 0; height: max(520px, calc(100vh - 170px)); }
+.lanes { position: absolute; inset: 10px 46px 10px 12px; background: repeating-linear-gradient(var(--track) 0 calc(var(--lh) - 1px), rgba(255,255,255,.35) calc(var(--lh) - 1px) var(--lh)); }
+.startL { position: absolute; top: 10px; bottom: 10px; left: 12px; width: 3px; background: #fff; }
+.finishL { position: absolute; top: 10px; bottom: 10px; right: 34px; width: 12px; background: repeating-conic-gradient(#fff 0 25%, #10172e 0 50%) 0 0 / 12px 12px; }
+.dot { position: absolute; left: 12px; width: var(--ds); height: var(--ds); margin: calc(var(--ds) / -2) 0 0 calc(var(--ds) / -2); border-radius: 50%; border: 1.5px solid #fff; will-change: transform; transition: width .3s, height .3s; }
+.dot.m1 { background: var(--gold) !important; z-index: 3; box-shadow: 0 0 8px 2px rgba(255,201,40,.7); }
+.dot.m2 { background: #d9e0ff !important; z-index: 3; box-shadow: 0 0 8px 2px rgba(217,224,255,.6); }
+.dot.m3 { background: #e39a62 !important; z-index: 3; box-shadow: 0 0 8px 2px rgba(227,154,98,.6); }
+.tagD .st { color: var(--gold); margin-right: 4px; }
+.dot.fast { --ds: 22px !important; background: var(--mint) !important; z-index: 3; box-shadow: 0 0 14px 4px rgba(62,230,160,.6); }
+.tagD { position: absolute; left: calc(100% + 6px); top: 50%; transform: translateY(-50%); white-space: nowrap; background: #10172e; color: var(--ink); font-weight: 800; font-size: .85rem; padding: 1px 8px; border-radius: 6px; z-index: 4; }
+.tagD .rk { color: var(--gold); margin-right: 4px; }
+.dot.flip .tagD { left: auto; right: calc(100% + 6px); }
+.dot.top { z-index: 2; }
+
+.side { background: var(--stand); border-radius: 16px; padding: 14px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.side h2 { margin: 0; font-family: var(--board); font-weight: 900; text-transform: uppercase; font-size: 1.5rem; }
+.lead { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.lead li { display: grid; grid-template-columns: 26px 12px minmax(0,1fr) auto; align-items: center; gap: 8px; padding: 5px 8px; border-radius: 8px; background: rgba(255,255,255,.04); font-weight: 800; }
+.lead li .r { font-family: var(--board); font-size: 1.2rem; color: var(--soft); text-align: right; }
+.lead li:first-child .r { color: var(--gold); }
+.lead li .c { width: 12px; height: 12px; border-radius: 50%; }
+.lead li .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lead li .v { color: var(--soft); font-size: .85rem; font-variant-numeric: tabular-nums; }
+.note { color: var(--soft); font-size: .85rem; }
+
+.banner { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(92%, 620px); background: rgba(11,17,48,.94); border: 3px solid var(--gold); border-radius: 20px; padding: 22px 24px; display: grid; gap: 14px; text-align: center; z-index: 10; }
+.banner .bk { font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); font-size: .85rem; }
+.banner .bt { font-family: var(--board); font-weight: 900; text-transform: uppercase; font-size: clamp(2rem, 5vw, 3.4rem); line-height: .95; }
+.banner .bs { color: var(--soft); font-weight: 700; font-size: 1.1rem; }
+.banner .btns { justify-content: center; }
+
+.results { background: var(--stand); border-radius: 16px; padding: 18px; display: grid; gap: 16px; }
+.results h2 { margin: 0; font-family: var(--board); font-weight: 900; text-transform: uppercase; font-size: 2rem; }
+.podium { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: end; max-width: 720px; }
+.step { border-radius: 14px 14px 4px 4px; padding: 14px 10px; text-align: center; display: grid; gap: 4px; }
+.step b { font-family: var(--board); font-weight: 900; font-size: clamp(1.4rem, 3.4vw, 2.2rem); text-transform: uppercase; overflow-wrap: anywhere; line-height: 1; }
+.step span { font-weight: 800; }
+.step .pl { font-family: var(--board); font-size: 2.6rem; line-height: 1; }
+.s1 { background: var(--gold); color: #1d1500; min-height: 190px; order: 2; }
+.s2 { background: #c9d2f5; color: #141c45; min-height: 150px; order: 1; }
+.s3 { background: #e39a62; color: #2a1405; min-height: 120px; order: 3; }
+.full { list-style: none; margin: 0; padding: 0; columns: 3 220px; column-gap: 18px; }
+.full li { break-inside: avoid; display: flex; gap: 8px; padding: 4px 0; border-bottom: 1px solid var(--line); font-weight: 700; }
+.full li .r { width: 2.4em; text-align: right; color: var(--soft); font-variant-numeric: tabular-nums; }
+.full li .tm { margin-left: auto; color: var(--soft); font-variant-numeric: tabular-nums; }
+.dq { color: #ff9db3; font-weight: 800; }
+.teams { display: flex; flex-wrap: wrap; gap: 6px 18px; font-weight: 800; margin-top: 6px; }
+.teams span { display: inline-flex; align-items: center; gap: 6px; }
+.teams i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #fff; }
+.tm1 i { background: var(--cl); } .tm2 i { background: var(--co); }
+.teams b { color: var(--soft); font-weight: 700; }
+.tagD.t1 { box-shadow: inset 4px 0 0 var(--cl); padding-left: 10px; }
+.tagD.t2 { box-shadow: inset 4px 0 0 var(--co); padding-left: 10px; }
+.tbl { border-collapse: collapse; font-weight: 800; font-size: 1.1rem; max-width: 640px; width: 100%; }
+.tbl th, .tbl td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: right; font-variant-numeric: tabular-nums; }
+.tbl th:first-child, .tbl td:first-child { text-align: left; }
+.tbl th { color: var(--soft); font-size: .85rem; letter-spacing: .08em; text-transform: uppercase; }
+.tbl tr.win td:first-child::after { content: "  ★"; color: var(--gold); }
+.full li .tc { width: 10px; height: 10px; border-radius: 50%; align-self: center; flex: none; }
+.netErr { background: #5a1830; color: #ffd6e0; border-radius: 12px; padding: 10px 14px; font-weight: 800; }
+@media (prefers-reduced-motion: reduce) { .dot { transition: none; } }
+</style>
+</head>
+<body>
+<nav style="max-width:1500px;margin:0 auto 10px;display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center">
+  <a href="./?cours" style="color:#9ba6d6;font-weight:800;text-decoration:none">← Retour</a>
+</nav>
+
+<div class="app">
+  <div class="top">
+    <div class="title"><div class="kicker">Départ : test 1 · Foulées : test 2 (cibles)</div><h1>Classe contre collègues</h1><div class="teams"><span class="tm1"><i></i>Ma classe <b id="nCl">…</b></span><span class="tm2"><i></i>Mes collègues <b id="nCo">…</b></span></div></div>
+    <div class="score"><span class="lampS" id="lampS" aria-hidden="true"></span><span class="clock" id="clock">0,00</span><span class="mode" id="mode">Prêts?</span></div>
+    <div class="btns"><button class="go" type="button" id="playBtn" disabled>Chargement…</button><button type="button" id="realBtn">Vitesse réelle</button></div>
+  </div>
+  <div class="stage">
+    <div class="trackWrap" id="trackWrap">
+      <div class="lanes" id="lanes"></div>
+      <div class="startL"></div><div class="finishL"></div>
+      <div id="dots"></div>
+      <div class="banner" id="banner" hidden role="status"><div class="bk" id="bk"></div><div class="bt" id="bt"></div><div class="bs" id="bs"></div><div class="btns"><button class="go" type="button" id="contBtn">Continuer</button></div></div>
+    </div>
+    <aside class="side">
+      <h2>En tête</h2>
+      <ol class="lead" id="lead"></ol>
+      <p class="note" id="count"></p>
+    </aside>
+  </div>
+  <p class="netErr" id="netErr" hidden></p>
+  <section class="results" id="results" hidden>
+    <h2>Les équipes</h2>
+    <table class="tbl" id="teamTbl"></table>
+    <h2>Le podium</h2>
+    <div class="podium" id="podium"></div>
+    <h2>Classement complet</h2>
+    <ol class="full" id="full"></ol>
+  </section>
+</div>
+<script>
+(function () {
+  "use strict";
+  var RUNNERS = [{"n":"Layla","t":[428,778,907,1044,1166,1300,1411,1536,1656,1781,1899,2019,2128,2255,2374,2496,2609,2744,2863,3004,3118,3264,3383,3511,3625,3761,3875,4003,4128,4262]},{"n":"Bast","t":[301,401,534,684,817,934,1084,1218,1368,1500,1634,1767,1917,2067,2217,2351,2501,2634,2767,2900,3050,3167,3317,3450,3600,3734,3867,4000,4166,4283]},{"n":"Thomas P","t":[297,444,584,746,869,1019,1147,1295,1418,1576,1713,1830,1972,2115,2264,2329,2496,2653,2804,2939,3072,3223,3356,3489,3639,3788,3898,4082,4223,4350]},{"n":"Eloïse","t":[301,452,568,716,851,967,1101,1235,1368,1501,1635,1768,1900,2051,2168,2302,2435,2568,2719,2869,3019,3152,3452,3603,3771,3920,4087,4205,4355,4504]},{"n":"Kristina","t":[502,635,771,896,1058,1165,1304,1437,1570,1704,1837,1970,2104,2237,2370,2520,2637,2787,2920,3054,3187,3337,3471,3604,3737,3887,4021,4170,4602,4738]},{"n":"Catherine 2","t":[346,513,664,814,980,1131,1296,1428,1580,1730,1880,2030,2180,2312,2481,2650,2799,2931,3082,3212,3382,3516,3684,3813,3983,4113,4284,4435,4601,4750]},{"n":"Catherine","t":[383,583,749,916,1082,1215,1365,1515,1682,1832,1997,2114,2280,2414,2579,2695,2862,2996,3162,3296,3461,3595,3761,3895,4061,4193,4337,4488,4644,4776]},{"n":"Caroline","t":[389,574,751,892,1059,1194,1358,1510,1675,1817,1987,2117,2268,2400,2577,2712,2887,3020,3197,3345,3494,3630,3796,3938,4105,4230,4388,4522,4697,4803]},{"n":"Maude","t":[349,483,649,800,966,1100,1266,1415,1582,1715,1864,2013,2181,2314,2481,2630,2796,2925,3079,3247,3429,3562,3728,3878,4060,4194,4377,4510,4676,4809]},{"n":"Adèle","t":[417,585,697,865,1016,1166,1316,1447,1596,1747,1899,2030,2199,2352,2480,2651,2799,2949,3116,3267,3431,3581,3752,3899,4050,4182,4370,4514,4686,4835]},{"n":"Stéphanie","t":[265,429,605,772,957,1129,1304,1464,1619,1765,1922,2052,2181,2349,2505,2644,2835,2974,3125,3267,3431,3586,3744,3897,4047,4224,4374,4533,4693,4836]},{"n":"Dareyne","t":[368,524,662,835,980,1141,1297,1446,1571,1730,1877,2030,2197,2354,2508,2665,2804,2974,3129,3278,3428,3592,3754,3913,4062,4228,4407,4559,4713,4895]},{"n":"Carlita","t":[287,422,555,688,838,954,1105,1237,1404,1521,1653,1786,1937,2053,2202,2336,2485,2619,2785,2903,3068,3178,3326,3462,3633,3752,4098,4515,4666,4898]},{"n":"Mei Lee","t":[344,516,683,833,999,1150,1316,1468,1633,1783,1950,2117,2284,2417,2601,2734,2917,3067,3234,3400,3585,3717,3884,4034,4196,4344,4514,4681,4846,5000]},{"n":"Michael Paige","t":[280,960,1137,1285,1436,1587,1739,1868,2008,2106,2271,2389,2555,2688,2839,2957,3120,3219,3406,3535,3705,3857,4019,4153,4319,4458,4604,4736,4920,5038]},{"n":"Sébastien 2","t":[344,536,735,927,1102,1225,1393,1575,1759,1910,2077,2243,2417,2560,2732,2893,3058,3209,3394,3551,3701,3868,4042,4185,4326,4492,4651,4791,4950,5143]},{"n":"Jo","t":[435,626,797,955,1129,1278,1471,1621,1796,1929,2104,2255,2438,2596,2771,2913,3096,3229,3429,3563,3754,3894,4080,4212,4404,4537,4721,4862,5054,5188]},{"n":"Etienne","t":[336,503,652,799,951,1104,1237,1386,1536,1686,1821,1970,2120,2270,2403,2553,2704,2838,2987,3120,3271,3404,3552,3688,3821,4237,4686,4855,5038,5205]},{"n":"Marco","t":[303,486,686,885,1053,1219,1385,1536,1701,1867,2034,2184,2383,2534,2717,2883,3033,3199,3365,3532,3715,3881,4065,4230,4414,4597,4763,4930,5113,5265]},{"n":"Camilia","t":[366,516,665,866,1032,1183,1350,1500,1666,1868,2049,2201,2384,2551,2718,2901,3051,3218,3396,3584,3719,3919,4069,4235,4402,4603,4716,4920,5086,5286]},{"n":"K","t":[296,427,597,1011,1195,1347,1513,1680,1863,2031,2215,2365,2548,2698,2881,3032,3214,3382,3566,3716,3882,4034,4201,4368,4551,4701,4868,5018,5202,5315]},{"n":"Noémie","t":[286,424,570,705,864,1009,1163,1304,1457,1602,1728,1856,2015,2184,2617,2786,2938,3116,3572,3734,3903,4072,4226,4377,4538,4698,4850,5002,5154,5348]},{"n":"Audrey","t":[382,547,685,825,978,1221,1343,1477,1682,1822,1970,2120,2288,2414,2568,2690,2840,2980,3126,3278,3415,3580,3714,3860,4002,4147,4295,4429,5226,5388]},{"n":"Chantal","t":[445,888,1063,1270,1436,1612,1775,1934,2085,2242,2391,2550,2708,2866,3006,3165,3324,3481,3632,3789,3948,4095,4257,4415,4590,4756,4915,5074,5237,5397]},{"n":"Isabelle","t":[365,565,748,900,1083,1267,1451,1634,1833,2000,2186,2351,2536,2703,2885,3037,3219,3370,3570,3737,3922,4088,4289,4455,4655,4822,5022,5173,5371,5539]},{"n":"Dydy","t":[354,504,668,810,953,1091,1235,1370,1512,1646,1797,1936,2074,2225,2368,3009,3178,3333,3498,3940,4102,4282,4430,4602,4759,4912,5055,5213,5390,5549]},{"n":"Sophie","t":[388,579,746,922,1089,1256,1428,1605,1781,1957,2125,2299,2475,2659,2834,3026,3209,3385,3568,3742,3918,4101,4284,4461,4644,4820,5004,5187,5370,5554]},{"n":"Cloé","t":[303,647,854,1039,1223,1406,1573,1756,1940,2123,2273,2458,2641,2823,2992,3158,3324,3501,3669,3842,4010,4209,4361,4544,4727,4893,5062,5260,5445,5628]},{"n":"Sébastien 1","t":[384,599,780,957,1141,1331,1516,1705,1879,2064,2254,2438,2623,2796,2992,3162,3363,3538,3743,3911,4094,4244,4445,4602,4801,4968,5151,5325,5517,5684]},{"n":"Julie Lamontagne","t":[313,530,746,928,1112,1295,1478,1662,1845,2027,2211,2410,2576,2743,2926,3109,3291,3475,3659,3841,4057,4240,4423,4673,4873,5055,5255,5439,5638,5805]},{"n":"Arielle","t":[290,438,588,738,872,1047,1178,1346,1475,1634,1759,1950,2320,2666,2830,2997,3125,3292,3434,3608,3750,3942,4100,4275,4425,4916,5254,5447,5837,6162]},{"n":"Thomas","t":[380,958,1156,1307,1456,1614,1766,1907,2057,2199,2357,2491,2634,2783,2925,3075,3260,3417,3896,4052,4686,4881,5028,5203,5387,5554,5721,5880,6040,6188]},{"n":"Elyse","t":[365,641,859,1075,1260,1492,1690,1926,2111,2343,2511,2743,2928,3160,3344,3577,3776,3995,4194,4393,4593,4812,4997,5195,5394,5595,5781,6014,6189,6430]},{"n":"Geneviève","t":[422,788,1036,1252,1453,1636,1850,2051,2250,2450,2682,2882,3097,3331,3529,3730,3944,4145,4377,4609,4810,5026,5257,5491,5707,5922,6155,6387,6588,6788]},{"n":"Pierrick","t":[345,527,699,838,1022,1146,1513,1626,1815,1959,2157,2273,2689,2831,3032,3502,3694,3824,4021,4368,4561,5064,5613,5772,5967,6106,6299,6452,6635,6790]},{"n":"Gabrielle","t":[295,495,709,924,1119,1318,1550,1733,1933,2112,2308,2512,2715,2895,3094,3293,3492,3674,3838,4641,4968,5182,5434,5628,5845,6057,6259,6454,6674,6867]},{"n":"Robert","t":[573,787,1073,1296,1538,1751,1970,2186,2359,2566,2725,2933,3132,3341,3523,3713,3889,4095,4263,4470,4671,4867,5052,5268,5458,6093,6319,6541,6723,7405]},{"n":"Karine 2","t":[251,451,617,778,934,1119,1284,1467,1634,1799,1967,2148,2315,2482,2665,2862,3015,3697,3881,4212,4412,4630,4829,5229,5445,5676,5910,6758,7209,7493]},{"n":"Juliette","t":[303,438,604,735,1201,1719,1934,2118,2649,2816,3481,3615,3782,3948,4080,4247,4416,4897,5032,5215,5696,5865,6047,6230,6414,6596,6995,7161,7328,7494]},{"n":"Charlotte","t":[372,555,786,971,1154,1353,1568,1918,2151,2949,3282,3582,3849,4081,4314,4547,4764,4963,5163,5347,5562,5895,6244,6445,6710,6928,7177,7377,7609,7808]},{"n":"Jé","t":[315,845,1108,1353,1700,1946,2242,2471,2784,3030,3310,3538,3836,4064,4345,4573,4869,5098,5395,5640,5937,6166,6479,6691,6958,7204,7483,7696,8047,8276]},{"n":"Xuan","t":[327,806,1106,1464,1789,2141,2473,2814,3184,3576,3958,4368,4750,5161,5519,5936,6335,6738,7135,7613,8029,8471,8931,9305,9682,10082,10500,10916,11282,11717]}];
+  var DQ = {"n":"Antoine","t":[318,394,494,587,654,756,823,939,1007,1120,1187,1301,1372,1478,1546,1653,1728,1840,1912,2016,2082,2195,2263,2372,2451,2554,2631,2733,2796,2914]};
+  var N = 30, CL = "#ff5c8a", CO = "#3d9bff", TEAM = { 1: "Ma classe", 2: "Mes collègues" };
+  var API = "/api/resultats";
+  var $ = function (id) { return document.getElementById(id); };
+  function fmt(v, d) { return v.toFixed(d).replace(".", ","); }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  // Les élèves : test 1 (départ) + test 2 (cibles), lus en direct, jumelés par téléphone comme sur le tableau
+  function list(c) { return fetch(API + "?classe=" + encodeURIComponent(c), { cache: "no-store" }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }).then(function (d) { return d.results || []; }); }
+  function ok(r) { return r && Array.isArray(r.taps) && r.taps.length >= N && r.name; }
+  Promise.all([list("COURS"), list("COURS2")]).then(function (ls) {
+    var by2 = {}; ls[1].forEach(function (r) { if (ok(r)) by2[r.id] = r; });
+    var cls = [];
+    ls[0].forEach(function (r) { if (!r || !Array.isArray(r.taps) || !r.taps.length || !r.name || !by2[r.id]) return; var d = r.taps[0]; cls.push({ n: String(r.name).slice(0, 24), t: by2[r.id].taps.slice(0, N).map(function (x) { return d + x; }) }); });
+    start(cls);
+  }).catch(function () {
+    $("netErr").hidden = false; $("netErr").textContent = "Impossible de lire les résultats de la classe. Vérifie la connexion, puis recharge la page.";
+    $("playBtn").textContent = "Pas de données";
+  });
+
+  // Même groupe que le nuage « Mes collègues (23 adultes) » : sans les plus de 40 ans, l'enfant et Pierrick (test 1 non valide)
+  var HORS = ["Sophie", "Robert", "Xuan", "Charlotte", "Pierrick"];
+  RUNNERS = RUNNERS.filter(function (r) { return HORS.indexOf(r.n) < 0; });
+  function start(CLASS) {
+  if (!CLASS.length) { $("netErr").hidden = false; $("netErr").textContent = "Personne de la classe n'a encore terminé les deux tests."; $("playBtn").textContent = "En attente"; return; }
+  $("playBtn").disabled = false; $("playBtn").textContent = "Lancer la course";
+  $("nCl").textContent = CLASS.length; $("nCo").textContent = RUNNERS.length;
+  var R = CLASS.map(function (r) { r.team = 1; return r; }).concat(RUNNERS.map(function (r) { r.team = 2; return r; })).map(function (r) {
+    var t = r.t; return { name: r.n, team: r.team, t: t, rt: t[0], arr: t[N - 1], cad: (N - 1) / ((t[N - 1] - t[0]) / 1000), color: r.team === 1 ? CL : CO };
+  });
+  // ordre des couloirs mélangé (stable) pour ne rien révéler
+  R.sort(function (a, b) { return (a.name.charCodeAt(0) * 7 + a.t[3]) % 97 - (b.name.charCodeAt(0) * 7 + b.t[3]) % 97; });
+  var best = R.reduce(function (a, b) { return b.rt < a.rt ? b : a; });
+  var fast = R.reduce(function (a, b) { return b.cad > a.cad ? b : a; });
+  var byArr = R.slice().sort(function (a, b) { return a.arr - b.arr; });
+
+  var wrap = $("trackWrap"), lanesEl = $("lanes"), dotsEl = $("dots"), W = 0, H = 0, lh = 10;
+  dotsEl.innerHTML = R.map(function (r, i) { return '<div class="dot" id="d' + i + '" style="background:' + r.color + '"></div>'; }).join("");
+  R.forEach(function (r, i) { r.el = $("d" + i); });
+  // Mesure de la piste. On la refait à chaque image : certains navigateurs (ex. celui de Messenger)
+  // changent la taille de la page sans prévenir, ce qui faisait « reculer » tout le monde.
+  function measure() {
+    W = lanesEl.clientWidth; H = lanesEl.clientHeight; lh = H / R.length;
+    wrap.style.setProperty("--lh", lh + "px");
+    var ds = Math.max(7, Math.min(16, lh - 2));
+    R.forEach(function (r, i) { r.el.style.setProperty("--ds", ds + "px"); r.el.style.top = (10 + lh * (i + .5)) + "px"; });
+  }
+  function layout() { measure(); draw(lastT); }
+  // L'étiquette reste à droite du point tant qu'elle a la place ; elle passe à gauche seulement près de l'arrivée
+  function flipIfNeeded(r) {
+    var tag = r.el.firstChild, x = r.p * W;
+    var room = W + 30; // la piste + la zone d'arrivée
+    var need = tag ? x + 14 + tag.offsetWidth : 0;
+    r.el.classList.toggle("flip", !!tag && (need > room || r.p >= 1));
+  }
+  function pos(r, t) {
+    var a = r.t; if (t < a[0]) return 0;
+    var k = 0; while (k < N && a[k] <= t) k++;
+    if (k >= N) return 1;
+    return (k + (t - a[k - 1]) / (a[k] - a[k - 1])) / N;
+  }
+  var lastT = -1, lastLead = 0;
+  function draw(t) {
+    lastT = t;
+    if (lanesEl.clientWidth !== W || lanesEl.clientHeight !== H) measure();
+    $("lampS").classList.toggle("on", t >= 0);
+    $("clock").textContent = fmt(Math.max(0, t) / 1000, 2);
+    R.forEach(function (r) { r.p = pos(r, t); r.el.style.transform = "translateX(" + Math.round(r.p * W) + "px)"; flipIfNeeded(r); });
+    var now = performance.now();
+    if (now - lastLead > 120 || t < 0) { lastLead = now; renderLead(t); }
+  }
+  function renderLead(t) {
+    var all = R.slice().sort(function (a, b) {
+      var fa = t >= a.arr, fb = t >= b.arr;
+      if (fa && fb) return a.arr - b.arr; if (fa) return -1; if (fb) return 1;
+      return b.p - a.p || a.rt - b.rt;
+    });
+    var s = all.slice(0, 10);
+    $("lead").innerHTML = t < 0 ? '<li><span class="r">—</span><span></span><span class="nm">En attente du départ</span><span></span></li>' : s.map(function (r, i) {
+      var v = t >= r.arr ? fmt(r.arr / 1000, 2) + " s" : Math.min(N, Math.floor(r.p * N)) + "/30";
+      return '<li><span class="r">' + (i + 1) + '</span><span class="c" style="background:' + r.color + '"></span><span class="nm">' + esc(r.name) + '</span><span class="v">' + v + "</span></li>";
+    }).join("");
+    // étiquettes : les 5 premiers encore en course + le podium déjà arrivé
+    var running = all.filter(function (r) { return t < r.arr; }).slice(0, 5);
+    // seul le dernier arrivé garde son nom, le temps que le suivant franchisse la ligne
+    var arrived = R.filter(function (r) { return t >= r.arr; }).sort(function (a, b) { return a.arr - b.arr; });
+    var lastIn = arrived.length ? [arrived[arrived.length - 1]] : [];
+    updateTags(t < 0 ? [] : lastIn.concat(running), all);
+    var fin = R.filter(function (r) { return t >= r.arr; }).length;
+    $("count").textContent = R.length + " coureurs · " + fin + " arrivé" + (fin > 1 ? "s" : "");
+  }
+  function setMode(txt, hot) { var m = $("mode"); m.textContent = txt; m.classList.toggle("hot", !!hot); }
+  function updateTags(top, all) {
+    R.forEach(function (r) {
+      var i = top.indexOf(r), html = "";
+      if (startPause) { i = -1; if (r.mark) html = '<span class="tagD t' + r.team + '"><span class="rk">' + (r.mark === 1 ? "1er" : r.mark + "e") + ' départ</span>' + esc(r.name) + "</span>"; }
+      else if (i >= 0) html = '<span class="tagD t' + r.team + '"><span class="rk">' + (all.indexOf(r) + 1) + '</span>' + esc(r.name) + "</span>";
+      if (r.tagHtml !== html) { r.tagHtml = html; r.el.innerHTML = html; flipIfNeeded(r); }
+      r.el.classList.toggle("top", i >= 0);
+    });
+  }
+  var startPause = false;
+  function clearMarks() { R.forEach(function (r) { r.el.classList.remove("m1", "m2", "m3", "top"); r.mark = false; r.tagHtml = ""; r.el.innerHTML = ""; }); }
+
+  var raf = 0, resume = null;
+  function banner(k, title, sub, next, btn) {
+    cancelAnimationFrame(raf);
+    $("bk").textContent = k; $("bt").textContent = title; $("bs").textContent = sub || "";
+    $("contBtn").textContent = btn || "Continuer"; $("contBtn").hidden = !next;
+    $("banner").hidden = false; resume = next;
+  }
+  $("contBtn").addEventListener("click", function () { $("banner").hidden = true; var f = resume; resume = null; if (f) f(); });
+
+  var runId = 0;
+  function play(real) {
+    var myRun = ++runId;
+    cancelAnimationFrame(raf); clearMarks(); $("results").hidden = true; $("banner").hidden = true;
+    var startEnd = Math.max.apply(null, R.map(function (r) { return r.rt; })) + 150;
+    var midT = Math.min.apply(null, R.map(function (r) { return r.t[N / 2 - 1]; }));
+    var endT = byArr[byArr.length - 1].arr + 400;
+    var t = -1200, prev = null, p1 = false, p2 = false, ARR_GAP = 1300;
+    draw(-1); setMode("Prêts?", false);
+    // Une seule boucle à la fois, et le temps ne recule jamais (sécurités pour les navigateurs intégrés, ex. Messenger)
+    function go() { cancelAnimationFrame(raf); prev = null; raf = requestAnimationFrame(step); }
+    function step(now) {
+      if (prev == null) prev = now;
+      var dt = Math.max(0, Math.min(64, now - prev)); prev = now;
+      var rate;
+      if (real) { rate = 1; setMode("Vitesse réelle", false); }
+      else if (t < 0) { rate = .6; setMode("À vos marques…", false); }
+      else if (t < startEnd) { rate = 1 / 8; setMode("Départ au ralenti", true); }
+      else if (t < byArr[0].arr - 300) { rate = 1 / 3.5; setMode("Ralenti", false); }
+      else {
+        // Arrivées : on laisse au moins ARR_GAP ms d'écran entre deux coureurs qui franchissent la ligne
+        var prevA = -Infinity, nextA = null;
+        for (var k = 0; k < byArr.length; k++) { if (byArr[k].arr <= t) prevA = byArr[k].arr; else { nextA = byArr[k].arr; break; } }
+        if (nextA == null) rate = 1 / 4;
+        else { var g = nextA - Math.max(prevA, byArr[0].arr - 300); rate = Math.max(1 / 60, Math.min(1 / 4, g / ARR_GAP)); }
+        setMode("Arrivées au ralenti", true);
+      }
+      t += dt * rate;
+      if (myRun !== runId) return; // une ancienne course ne doit plus rien dessiner
+      if (!real && !p1 && t >= startEnd) {
+        t = startEnd; p1 = true;
+        var top3 = R.slice().sort(function (a, b) { return a.rt - b.rt; }).slice(0, 3);
+        top3.forEach(function (r, i) { r.mark = i + 1; r.tagHtml = null; r.el.classList.add("m" + (i + 1)); });
+        startPause = true; draw(t); renderLead(t);
+        banner("Tout le monde est parti!", "Meilleur départ : " + best.name,
+          top3.map(function (r, i) { return (i + 1) + ". " + r.name + " (" + r.rt + " ms)"; }).join("  ·  "),
+          function () { startPause = false; clearMarks(); go(); }); return;
+      }
+      draw(t);
+      if (t < endT) { raf = requestAnimationFrame(step); return; }
+      setMode("Arrivée!", true); draw(endT); showResults();
+    }
+    banner("Annonce officielle", DQ.n + " (collègues) est disqualifié", "Motif : dopage, deux doigts aux cibles!", function () {
+      banner("Départ", "À vos marques… prêts…", "Le signal lumineux arrive", go, "Partez!");
+    }, "Compris!");
+  }
+  function med(a) { a = a.slice().sort(function (x, y) { return x - y; }); var n = a.length; return n % 2 ? a[(n - 1) / 2] : (a[n / 2 - 1] + a[n / 2]) / 2; }
+  function teamStats(k) {
+    var m = R.filter(function (r) { return r.team === k; });
+    var top10 = byArr.slice(0, 10).filter(function (r) { return r.team === k; }).length;
+    return { k: k, n: m.length, rt: med(m.map(function (r) { return r.rt; })), cad: med(m.map(function (r) { return r.cad; })), arr: med(m.map(function (r) { return r.arr; })), top10: top10 };
+  }
+  function showResults() {
+    var w = byArr[0], A = teamStats(1), B = teamStats(2), win = A.arr <= B.arr ? A : B, lose = win === A ? B : A;
+    banner("Arrivée", w.name + " gagne!", "En " + fmt(w.arr / 1000, 2) + " s · " + TEAM[w.team] + (w === fast ? " · la plus grande vitesse!" : ""), function () {
+      banner("Résultat des équipes", TEAM[win.k] + " gagne!", "Temps du coureur du milieu : " + fmt(win.arr / 1000, 2) + " s contre " + fmt(lose.arr / 1000, 2) + " s",
+        function () { $("results").scrollIntoView({ behavior: "smooth" }); }, "Voir les détails");
+    }, "Et les équipes?");
+    function row(s) { return '<tr' + (s === win ? ' class="win"' : "") + '><td>' + TEAM[s.k] + "</td><td>" + s.n + "</td><td>" + Math.round(s.rt) + " ms</td><td>" + fmt(s.cad, 1) + "/s</td><td>" + fmt(s.arr / 1000, 2) + " s</td><td>" + s.top10 + "</td></tr>"; }
+    $("teamTbl").innerHTML = "<tr><th>Équipe</th><th>Coureurs</th><th>Départ</th><th>Vitesse</th><th>Arrivée</th><th>Top 10</th></tr>" + row(A) + row(B) +
+      '<tr><td colspan="6" style="text-align:left;color:var(--soft);font-size:.85rem;font-weight:700">Valeurs du coureur du milieu de chaque équipe (médiane).</td></tr>';
+    var p = byArr.slice(0, 3);
+    $("podium").innerHTML = p.map(function (r, i) {
+      return '<div class="step s' + (i + 1) + '"><span class="pl">' + (i + 1) + "</span><b>" + esc(r.name) + "</b><span>" + fmt(r.arr / 1000, 2) + " s</span></div>";
+    }).join("");
+    $("full").innerHTML = byArr.map(function (r, i) {
+      return '<li><span class="r">' + (i + 1) + '.</span><span class="tc" style="background:' + r.color + '"></span><span>' + esc(r.name) + '</span><span class="tm">' + fmt(r.arr / 1000, 2) + " s</span></li>";
+    }).join("") + '<li class="dq"><span class="r">DQ</span><span>' + esc(DQ.n) + '</span><span class="tm">dopage</span></li>';
+    $("results").hidden = false;
+  }
+  $("playBtn").addEventListener("click", function () { play(false); });
+  $("realBtn").addEventListener("click", function () { play(true); });
+  window.addEventListener("resize", layout);
+  layout(); renderLead(-1);
+  }
+})();
+</script>
+
+</body>
+</html>

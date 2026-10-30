@@ -231,7 +231,7 @@ td:last-child { border-radius: 0 14px 14px 0; }
     <div class="rainbow" aria-hidden="true"><i style="background:var(--pink)"></i><i style="background:var(--orange)"></i><i style="background:var(--sun)"></i><i style="background:var(--green)"></i><i style="background:var(--blue)"></i><i style="background:var(--purple)"></i></div>
     <h1>Course de 30 foulées</h1>
     <p class="soft">Deux petits tests de vitesse. Écris ton prénom, puis suis les règles.</p>
-    <div class="rules"><h3>Les règles du test 1 : la course</h3><ol>
+    <div class="rules" id="rules1"><h3>Les règles du test 1 : la course</h3><ol>
 <li>Pose le téléphone à plat sur la table.</li>
 <li>Touche l'écran pour te placer, puis <b>attends la lumière sans toucher</b>.</li>
 <li>Dès que la lumière s'allume, tapote n'importe où sur l'écran, <b>30 fois, le plus vite possible</b>.</li>
@@ -262,6 +262,7 @@ td:last-child { border-radius: 0 14px 14px 0; }
       <p><span class="count" id="count">0</span> <span class="soft">coureurs arrivés</span> <span class="err" id="netErr" hidden>· connexion impossible, nouvel essai…</span></p>
       <div class="chips" id="chips"></div>
       <div><button class="btn-blue" type="button" id="runHere">Faire courir quelqu'un ici</button></div>
+      <div class="btns" id="raceLinks" hidden><a class="linkbtn" href="classe-vs-collegues.html" target="_blank" rel="noopener">Classe contre collègues</a></div>
     </div>
   </div>
 
@@ -303,7 +304,7 @@ td:last-child { border-radius: 0 14px 14px 0; }
     <p class="soft">Chaque point est une personne, placée selon sa cote de départ et sa cote de vitesse.</p>
     <div class="plots">
       <div class="plot"><h3>Notre classe</h3><div id="plotClass"></div></div>
-      <div class="plot" id="adultBox" hidden><h3>Mes collègues (45 adultes)</h3><div id="plotAdults"></div></div>
+      <div class="plot" id="adultBox" hidden><h3 id="plotAdultsTitle">Mes collègues (45 adultes)</h3><div id="plotAdults"></div></div>
     </div>
     <div class="tools"><button type="button" class="link" id="adultBtn">Comparer avec mes collègues</button></div>
   </div>
@@ -352,7 +353,9 @@ td:last-child { border-radius: 0 14px 14px 0; }
   function done(r) { return r.taps.length >= STRIDES; }
   function arrival(r) { return done(r) ? r.taps[STRIDES - 1] : null; }
   function cadence(r) { if (!done(r)) return null; var t = r.taps[STRIDES - 1] - r.taps[0]; return t > 0 ? (STRIDES - 1) / (t / 1000) : null; }
-  function cad1(r) { var c = cadence(r); return c == null ? null : Math.round(c * 10) / 10; }
+  function cad1(r) { var c = r.sp != null ? r.sp : cadence(r); return c == null ? null : Math.round(c * 10) / 10; }
+  function medSpeed(t) { var iv = []; for (var i = 1; i < t.length; i++) iv.push(t[i] - t[i - 1]); iv.sort(function (a, b) { return a - b; }); var m = iv.length % 2 ? iv[(iv.length - 1) / 2] : (iv[iv.length / 2 - 1] + iv[iv.length / 2]) / 2; return m > 0 ? 1000 / m : null; }
+  var UNIT = COURS ? "/s" : " f/s";
 
   // ---------- Stockage ----------
   var apiStore = {
@@ -386,7 +389,18 @@ td:last-child { border-radius: 0 14px 14px 0; }
 
   // ---------- Routage ----------
   // Une seule classe : le site ouvre le tableau ; le code QR mène à ?eleve.
-  var CLASS_KEY = "CLASSE";
+  // Mode « classe » (?cours) : résultats rangés à part, pour ne pas toucher aux données des collègues
+  var COURS = new URLSearchParams(location.search).has("cours");
+  // En classe, le test 1 mesure seulement la réaction : un seul toucher après la lumière
+  var T1N = COURS ? 1 : 30;
+  if (COURS) $("rules1").innerHTML = '<h3>Les règles du test 1 : la réaction</h3><ol>' +
+    "<li>Pose le téléphone à plat sur la table.</li>" +
+    "<li>Touche l'écran pour te placer, puis <b>attends la lumière sans toucher</b>.</li>" +
+    "<li>Dès que la lumière s'allume, touche l'écran <b>une seule fois, le plus vite possible</b>.</li>" +
+    "<li>Avec ton <b>index</b>.</li>" +
+    "<li>Tu fais <b>3 essais</b>. Les 2 premiers servent à pratiquer, <b>seul le 3e compte</b>.</li>" +
+    '</ol><p class="soft">Un essai est refusé, et tu le recommences, si tu touches avant la lumière ou si tu pars plus d\'une seconde après la lumière.</p>';
+  var CLASS_KEY = COURS ? "COURS" : "CLASSE";
 
   // ---------- Envoi d'un résultat ----------
   function sendResult(classe, rec, el, after) {
@@ -401,7 +415,7 @@ td:last-child { border-radius: 0 14px 14px 0; }
   // =====================================================
   // ÉLÈVE
   // =====================================================
-  var KEY2 = "CIBLES"; // résultats du test 2, rangés à part
+  var KEY2 = COURS ? "COURS2" : "CIBLES"; // résultats du test 2, rangés à part
   function norm(x) { return String(x).normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase(); }
   function panel(html) { $("stForm").parentNode.hidden = true; var p = $("stPanel"); p.hidden = false; p.innerHTML = html; window.scrollTo(0, 0); return p; }
   // Une personne = un téléphone (le prénom tapé peut varier d'une fois à l'autre)
@@ -457,7 +471,7 @@ td:last-child { border-radius: 0 14px 14px 0; }
   function panelReturning(classe, n, isNew) {
     var p = panel("<h2>Merci et bravo à tous les participants!</h2>" +
       "<p>" + (isNew ? "Bienvenue, " + esc(n) + "! La course est terminée. Viens voir les résultats de la grande course!" : "Bon retour, " + esc(n) + "! Tu as déjà fait la course. Viens voir les résultats de la grande course!") + "</p>" +
-      '<div><a class="linkbtn" href="course-collegues.html">Voir les résultats de la course</a></div>' +
+      (COURS ? "" : '<div><a class="linkbtn" href="course-collegues.html">Voir les résultats de la course</a></div>') +
       '<h2 style="margin-top:8px">Voici le deuxième test</h2>' +
       '<div class="rules"><h3>Les règles du test 2 : les cibles</h3><ol><li>Pose le téléphone à plat sur la table, <b>tourné sur le côté</b> : une cible à gauche, une à droite.</li><li>Touche la <b>cible bleue</b> pour commencer : le chrono part à ce moment-là. Il n\'y a pas de lumière à attendre.</li><li>Touche ensuite la <b>cible allumée</b> : droite, gauche, droite… <b>30 fois, le plus vite possible</b>.</li><li>Seule la cible allumée compte. Un toucher à côté ne fait pas avancer le compteur.</li><li><b>Un seul doigt</b> : l\'index.</li><li>Tu fais <b>3 essais</b>. Les 2 premiers servent à pratiquer, <b>seul le 3e compte</b>.</li></ol><p class="soft">Un essai est refusé, et tu le recommences, si tu utilises plus d\'un doigt ou s\'il dure plus de 15 secondes.</p></div>' +
       '<div><button class="btn-go" type="button" id="go2">Commencer le test 2</button></div>');
@@ -484,7 +498,7 @@ td:last-child { border-radius: 0 14px 14px 0; }
   var stage2 = $("stage2"), tL = $("tL"), tR = $("tR"), s2Msg = $("s2Msg");
   function c2Target(side) { C2.next = side; tL.classList.toggle("on", side === "L"); tR.classList.toggle("on", side === "R"); }
   function c2Count() { $("s2N").textContent = C2.hits.length; $("s2Fill").style.width = (C2.hits.length / C2.goal * 100) + "%"; }
-  function runCibles(n) { C2.name = n; C2.trial = 0; C2.sent = false; c2Open(); }
+  function runCibles(n, id, onEnd) { C2.name = n; C2.id = id || null; C2.onEnd = onEnd || null; C2.trial = 0; C2.sent = false; c2Open(); }
   function c2Portrait() { return window.innerHeight > window.innerWidth; }
   function c2CheckOrient() { $("s2Rotate").hidden = true; } // plus de blocage : les cibles suivent le long côté de l'écran
   window.addEventListener("resize", c2CheckOrient);
@@ -497,7 +511,7 @@ td:last-child { border-radius: 0 14px 14px 0; }
     s2Msg.innerHTML = '<div class="big">Touche la cible bleue pour commencer</div><div class="sub">' + (c2Portrait() ? "Astuce : tourne ton téléphone sur la table, une cible à gauche et une à droite." : "Le chrono part à ton premier toucher.") + "</div>";
     c2CheckOrient();
   }
-  function c2Close() { C2.phase = "off"; stage2.hidden = true; $("s2Rotate").hidden = true; if (C2.sent) panelDone(C2.name, false); }
+  function c2Close() { C2.phase = "off"; stage2.hidden = true; $("s2Rotate").hidden = true; if (C2.onEnd) { var f = C2.onEnd; C2.onEnd = null; f(); return; } if (C2.sent) panelDone(C2.name, false); }
   function c2Inside(el, x, y) { var b = el.getBoundingClientRect(), cx = b.left + b.width / 2, cy = b.top + b.height / 2, r = b.width / 2 + 24; return (x - cx) * (x - cx) + (y - cy) * (y - cy) <= r * r; }
   stage2.addEventListener("pointerdown", function (e) {
     if (e.target.closest("button")) return;
@@ -540,7 +554,7 @@ td:last-child { border-radius: 0 14px 14px 0; }
     }
     b = c2Btn("s2Done", "Terminer", c2Close);
     s2Msg.innerHTML = '<div class="big">Bravo!</div>' + tiles + '<p class="sent" id="s2Sent"></p>' + b.html; b.bind();
-    sendResult(KEY2, { id: myId(), name: C2.name, taps: taps }, $("s2Sent"), function () { C2.sent = true; });
+    sendResult(KEY2, { id: C2.id || myId(), name: C2.name, taps: taps }, $("s2Sent"), function () { C2.sent = true; });
   }
 
 
@@ -554,7 +568,7 @@ td:last-child { border-radius: 0 14px 14px 0; }
   function runTest(name, cb, closeCb) { onDone = cb; onClose = closeCb; trial = 0; openStage(name); }
   function openStage(name) {
     who = name; stage.hidden = false; lamp.hidden = true; lampOff.hidden = true; prog.hidden = true; phase = "ready";
-    show('<div class="sub" style="color:var(--sun);font-size:1.3rem">Essai ' + (trial + 1) + ' sur ' + TRIALS + (trial + 1 < TRIALS ? " (pratique)" : " (celui qui compte!)") + '</div><div class="big">' + esc(name) + ', à tes marques!</div><div class="sub">Touche l\'écran pour te placer, puis attends la lumière. Quand elle s\'allume, tapote 30 fois le plus vite possible, avec ton index seulement. Ne compte pas!</div>');
+    show('<div class="sub" style="color:var(--sun);font-size:1.3rem">Essai ' + (trial + 1) + ' sur ' + TRIALS + (trial + 1 < TRIALS ? " (pratique)" : " (celui qui compte!)") + '</div><div class="big">' + esc(name) + ', à tes marques!</div><div class="sub">Touche l\'écran pour te placer, puis attends la lumière. Quand elle s\'allume, ' + (COURS ? 'touche l\'écran <b>une seule fois</b>, le plus vite possible, avec ton index.' : 'tapote 30 fois le plus vite possible, avec ton index seulement. Ne compte pas!') + '</div>');
   }
   function closeStage() { clearTimeout(waitTimer); clearTimeout(endTimer); phase = "off"; stage.hidden = true; lamp.hidden = true; lampOff.hidden = true; prog.hidden = true; if (onClose) onClose(); }
   function startWait() {
@@ -564,7 +578,7 @@ td:last-child { border-radius: 0 14px 14px 0; }
   }
   function setProg() { $("progNum").textContent = taps.length; $("progFill").style.width = (taps.length / STRIDES * 100) + "%"; }
   function lightOn() {
-    taps = []; down = {}; multi = false; show(""); setProg(); prog.hidden = false;
+    taps = []; down = {}; multi = false; show(""); setProg(); prog.hidden = COURS;
     lamp.hidden = false; lampOff.hidden = true; phase = "go";
     onset = performance.now();
     requestAnimationFrame(function () { onset = performance.now(); });
@@ -573,6 +587,10 @@ td:last-child { border-radius: 0 14px 14px 0; }
   function falseStart() {
     clearTimeout(waitTimer); phase = "ready"; lampOff.hidden = true;
     show('<div class="big">Oups, faux départ!</div><div class="sub">Tu as touché avant la lumière. Touche l\'écran pour recommencer.</div>');
+  }
+  function tilesT1(res) {
+    return '<div class="tiles"><div style="background:var(--pink)"><span>' + (COURS ? "Réaction" : "Départ") + '</span><b>' + dep(res) + ' ms</b></div>' +
+      (COURS ? "" : '<div style="background:var(--blue)"><span>Vitesse</span><b>' + fmt(cadence(res), 1) + " f/s</b></div>") + "</div>";
   }
   function finish() {
     clearTimeout(endTimer);
@@ -587,9 +605,9 @@ td:last-child { border-radius: 0 14px 14px 0; }
       $("againBtn").addEventListener("click", function (e) { e.stopPropagation(); openStage(who); });
       return;
     }
-    var ok = done(res);
+    var ok = res.taps.length >= T1N;
     if (!ok) {
-      msg.innerHTML = '<div class="result"><div class="big">Temps écoulé</div><div class="sub">Tu as fait ' + res.taps.length + ' foulées sur 30. Cet essai ne compte pas. Recommence!</div>' +
+      msg.innerHTML = '<div class="result"><div class="big">Temps écoulé</div><div class="sub">' + (COURS ? "Tu n'as pas touché l'écran à temps." : 'Tu as fait ' + res.taps.length + ' foulées sur 30.') + ' Cet essai ne compte pas. Recommence!</div>' +
         '<div class="btns" style="justify-content:center"><button type="button" class="btn-go" id="againBtn">Recommencer</button><button type="button" id="backBtn">Annuler</button></div></div>';
       $("backBtn").addEventListener("click", function (e) { e.stopPropagation(); closeStage(); });
       $("againBtn").addEventListener("click", function (e) { e.stopPropagation(); openStage(who); });
@@ -598,7 +616,7 @@ td:last-child { border-radius: 0 14px 14px 0; }
     trial++;
     if (trial < TRIALS) {
       msg.innerHTML = '<div class="result"><div class="big">Essai ' + trial + ' réussi!</div>' +
-        '<div class="tiles"><div style="background:var(--pink)"><span>Départ</span><b>' + dep(res) + ' ms</b></div><div style="background:var(--blue)"><span>Vitesse</span><b>' + fmt(cadence(res), 1) + " f/s</b></div></div>" +
+        tilesT1(res) +
         '<div class="sub">C\'était un essai de pratique. Encore ' + (TRIALS - trial) + (TRIALS - trial > 1 ? " essais" : " essai") + '!</div>' +
         '<div class="btns" style="justify-content:center"><button type="button" class="btn-go" id="againBtn">Essai suivant</button><button type="button" id="backBtn">Annuler</button></div></div>';
       $("backBtn").addEventListener("click", function (e) { e.stopPropagation(); closeStage(); });
@@ -606,7 +624,7 @@ td:last-child { border-radius: 0 14px 14px 0; }
       return;
     }
     msg.innerHTML = '<div class="result"><div class="big">' + (ok ? "Bravo!" : "Temps écoulé") + "</div>" +
-      (ok ? '<div class="tiles"><div style="background:var(--pink)"><span>Départ</span><b>' + dep(res) + ' ms</b></div><div style="background:var(--blue)"><span>Vitesse</span><b>' + fmt(cadence(res), 1) + " f/s</b></div></div>"
+      (ok ? tilesT1(res)
           : '<div class="sub">Tu as fait ' + res.taps.length + " foulées sur 30. Essaie encore!</div>") +
       (ok ? '<p class="sent" id="sentStatus"></p>' : "") +
       '<div class="btns" style="justify-content:center"><button type="button" class="btn-go" id="backBtn">Terminer</button></div></div>';
@@ -625,7 +643,7 @@ td:last-child { border-radius: 0 14px 14px 0; }
     if (phase === "go") {
       if (Object.keys(down).length > 0 || (taps.length && t - taps[taps.length - 1] < MIN_GAP_MS)) multi = true;
       down[e.pointerId] = true;
-      taps.push(t); ripple(e.clientX, e.clientY); setProg(); if (taps.length >= STRIDES) { phase = "done"; setTimeout(finish, 250); } }
+      taps.push(t); ripple(e.clientX, e.clientY); setProg(); if (taps.length >= T1N) { phase = "done"; setTimeout(finish, COURS ? 150 : 250); } }
     else if (phase === "ready") startWait();
     else if (phase === "wait") falseStart();
   });
@@ -643,15 +661,22 @@ td:last-child { border-radius: 0 14px 14px 0; }
     $("viewBoard").hidden = false;
     if (PREVIEW) { $("qr").hidden = true; $("joinText").textContent = "Aperçu sur un seul appareil : touchez « Faire courir quelqu'un ici » pour chaque coureur."; }
     else {
-      var url = location.origin + location.pathname + "?eleve";
+      var url = location.origin + location.pathname + (COURS ? "?eleve&cours" : "?eleve");
       $("joinText").textContent = "Scanne le code ou va sur " + url.replace(/^https?:\/\//, "");
       try { new QRCode($("qr"), { text: url, width: 160, height: 160, correctLevel: QRCode.CorrectLevel.M }); } catch (e) { $("qr").hidden = true; }
     }
     $("runHere").addEventListener("click", function () {
       askName(function (name) {
-        runTest(name, function (res) { return function (el) { sendResult(classCode, { id: nameId(name), name: name, taps: res.taps }, el, poll); }; }, poll);
+        var sent1 = false;
+        runTest(name, function (res) { return function (el) { sendResult(classCode, { id: nameId(name), name: name, taps: res.taps }, el, function () { sent1 = true; poll(); }); }; },
+          function () { if (COURS && sent1) runCibles(name, nameId(name), poll); else poll(); });
       });
     });
+    if (COURS) {
+      document.querySelector("#resTable thead th:nth-child(5)").textContent = "Cibles";
+      $("plotAdultsTitle").textContent = "Mes collègues (37 adultes)";
+      $("raceLinks").hidden = false;
+    }
     renderBoard(); poll(); setInterval(poll, POLL_MS);
   }
   // Petite saisie de prénom intégrée (les boîtes de dialogue du navigateur ne sont pas fiables partout)
@@ -670,12 +695,29 @@ td:last-child { border-radius: 0 14px 14px 0; }
       box.remove(); cb(n);
     });
   }
+  var waiting = [];
+  function combine(l1, l2) {
+    var by2 = {}; l2.forEach(function (r) { if (r && Array.isArray(r.taps) && r.taps.length >= STRIDES) by2[r.id] = r; });
+    waiting = []; var out = [];
+    l1.forEach(function (r) {
+      if (!r || !Array.isArray(r.taps) || !r.name || r.taps.length < 1) return;
+      var r2 = by2[r.id];
+      if (!r2) { waiting.push(r); return; }
+      var d = r.taps[0];
+      out.push({ id: r.id, name: r.name, at: Math.max(r.at || 0, r2.at || 0), taps: r2.taps.map(function (x) { return d + x; }), sp: medSpeed(r2.taps) });
+    });
+    return out;
+  }
+  function listResults() {
+    if (!COURS) return store.list(classCode);
+    return Promise.all([store.list(classCode), store.list(KEY2)]).then(function (ls) { return combine(ls[0] || [], ls[1] || []); });
+  }
   function poll() {
-    store.list(classCode).then(function (list) {
+    listResults().then(function (list) {
       $("netErr").hidden = true;
       list = list.filter(function (r) { return r && Array.isArray(r.taps) && r.name; });
       list.sort(function (a, b) { return (a.at || 0) - (b.at || 0); });
-      var s = JSON.stringify(list.map(function (r) { return [r.id, r.at]; }));
+      var s = JSON.stringify(list.map(function (r) { return [r.id, r.at]; })) + "|" + waiting.map(function (r) { return r.id; }).join(",");
       if (s === sig) return;
       sig = s; results = list;
       if (playing) { pendingRender = true; renderChips(); } else renderBoard();
@@ -683,14 +725,18 @@ td:last-child { border-radius: 0 14px 14px 0; }
   }
   function renderChips() {
     $("count").textContent = results.length;
-    $("chips").innerHTML = results.map(function (r, i) { return '<span class="chip" style="background:' + color(i) + '">' + esc(r.name) + "</span>"; }).join("") ||
+    $("chips").innerHTML = results.map(function (r, i) { return '<span class="chip" style="background:' + color(i) + '">' + esc(r.name) + "</span>"; }).join("") +
+      waiting.map(function (r) { return '<span class="chip" style="background:#b8c2d6" title="Test 2 pas encore fait">' + esc(r.name) + " · test 2…</span>"; }).join("") ||
       '<span class="soft">En attente des premiers coureurs…</span>';
   }
   function renderBoard() { pendingRender = false; renderChips(); computeGrid(); buildTrack(); renderTable(); renderGrille(); renderPlots(); }
 
-  // ---------- Nuage de points (cotes 1 à 7) ----------
+  // ---------- Nuage de points (cotes 1 à NC) ----------
   // Collègues adultes (25-40 ans), cotes calculées dans leur propre groupe : [départ, vitesse]
   var ADULTS = [[1,1],[1,1],[1,1],[1,1],[1,3],[1,4],[1,5],[1,5],[2,1],[2,2],[2,2],[2,3],[2,4],[3,1],[3,3],[3,3],[3,5],[3,6],[3,7],[3,7],[4,1],[4,2],[4,3],[4,4],[4,5],[4,7],[5,1],[5,2],[5,2],[5,3],[5,3],[5,7],[6,3],[6,3],[6,5],[6,6],[6,7],[6,7],[7,2],[7,3],[7,5],[7,6],[7,6],[7,6],[7,7]];
+  // Collègues (23 adultes de 25 à 40 ans ayant fait les deux tests) : [cote départ, cote cibles]
+  // cotes 1 à 5 (quintiles des 37 collègues, vitesse aux cibles = intervalle médian)
+  var ADULTS_CIBLES = [[1,1],[1,2],[1,3],[1,3],[1,4],[1,4],[1,5],[1,5],[2,1],[2,1],[2,1],[2,3],[2,4],[2,5],[2,5],[3,2],[3,2],[3,2],[3,2],[3,3],[3,3],[3,5],[4,1],[4,2],[4,3],[4,3],[4,4],[4,5],[4,5],[4,5],[5,1],[5,1],[5,2],[5,2],[5,3],[5,4],[5,5]];
   function plotSvg(pts, withNames) {
     var W = 360, H = 360, L = 46, B = 44, T = 14, R = withNames ? 44 : 14, n = NC;
     var sx = function (v) { return L + (v - .5) / n * (W - L - R); };
@@ -703,7 +749,7 @@ td:last-child { border-radius: 0 14px 14px 0; }
       h += '<text x="' + (L - 12) + '" y="' + (sy(k) + 4) + '" text-anchor="middle" font-size="13">' + k + "</text>";
     }
     h += '<text x="' + ((L + W - R) / 2) + '" y="' + (H - 6) + '" text-anchor="middle" font-size="12">Cote de départ (1 = le plus rapide)</text>';
-    h += '<text transform="translate(12 ' + ((T + H - B) / 2) + ') rotate(-90)" text-anchor="middle" font-size="12">Cote de vitesse (1 = le plus rapide)</text>';
+    h += '<text transform="translate(12 ' + ((T + H - B) / 2) + ') rotate(-90)" text-anchor="middle" font-size="12">' + (COURS ? "Cote aux cibles" : "Cote de vitesse") + ' (1 = le plus rapide)</text>';
     var groups = {};
     pts.forEach(function (p) { var k = p.x + "," + p.y; (groups[k] = groups[k] || []).push(p); });
     Object.keys(groups).forEach(function (k) {
@@ -720,14 +766,14 @@ td:last-child { border-radius: 0 14px 14px 0; }
     var pts = [];
     results.forEach(function (r, i) { var a = coteRT(r), b = coteSp(r); if (a != null && b != null) pts.push({ x: a, y: b, name: r.name, color: color(i) }); });
     $("plotClass").innerHTML = pts.length ? plotSvg(pts, true) : '<p class="soft">Le nuage apparaît dès que 2 coureurs ont terminé.</p>';
-    $("plotAdults").innerHTML = plotSvg(ADULTS.map(function (p) { return { x: p[0], y: p[1], color: "#8b5cf6" }; }), false);
+    $("plotAdults").innerHTML = plotSvg((COURS ? ADULTS_CIBLES : ADULTS).map(function (p) { return { x: p[0], y: p[1], color: "#8b5cf6" }; }), false);
   }
 
   // ---------- Cotes par quintiles ----------
   var grid = { rt: null, sp: null };
   function quant(s, p) { var i = (s.length - 1) * p, lo = Math.floor(i), hi = Math.ceil(i); return s[lo] + (s[hi] - s[lo]) * (i - lo); }
-  var NC = 7; // nombre de cotes
-  var STEPS = [1, 2, 3, 4, 5, 6].map(function (k) { return k / NC; });
+  var NC = COURS ? 5 : 7; // nombre de cotes (5 pour la classe, 7 pour les collègues)
+  var STEPS = []; for (var q = 1; q < NC; q++) STEPS.push(q / NC);
   function computeGrid() {
     var fin = results.filter(done);
     if (fin.length < 2) { grid = { rt: null, sp: null }; return; }
@@ -746,9 +792,9 @@ td:last-child { border-radius: 0 14px 14px 0; }
     var a = "<h3>Cotes du départ</h3>" + row(1, "jusqu'à " + g[0] + " ms");
     for (var i = 1; i < NC - 1; i++) a += row(i + 1, g[i - 1] >= g[i] ? g[i] + " ms" : "de " + (g[i - 1] + 1) + " à " + g[i] + " ms");
     a += row(NC, "plus de " + g[NC - 2] + " ms");
-    var b = "<h3>Cotes de la vitesse</h3>" + row(1, fmt(s[0], 1) + " f/s et plus");
-    for (var j = 1; j < NC - 1; j++) { var top = Math.round((s[j - 1] - .1) * 10) / 10; b += row(j + 1, top <= s[j] ? fmt(s[j], 1) + " f/s" : "de " + fmt(s[j], 1) + " à " + fmt(top, 1) + " f/s"); }
-    b += row(NC, "moins de " + fmt(s[NC - 2], 1) + " f/s");
+    var b = "<h3>" + (COURS ? "Cotes de la vitesse aux cibles" : "Cotes de la vitesse") + "</h3>" + row(1, fmt(s[0], 1) + UNIT + " et plus");
+    for (var j = 1; j < NC - 1; j++) { var top = Math.round((s[j - 1] - .1) * 10) / 10; b += row(j + 1, top <= s[j] ? fmt(s[j], 1) + UNIT : "de " + fmt(s[j], 1) + " à " + fmt(top, 1) + UNIT); }
+    b += row(NC, "moins de " + fmt(s[NC - 2], 1) + UNIT);
     $("grille").innerHTML = '<div class="g">' + a + '</div><div class="g">' + b + "</div>";
   }
   function renderTable() {
@@ -760,7 +806,7 @@ td:last-child { border-radius: 0 14px 14px 0; }
         "<td>" + (done(r) ? dep(r) + ' <span class="unit">ms</span>' : "—") + "</td>" +
         "<td>" + badge(coteRT(r)) + "</td>" +
         '<td class="sep"></td>' +
-        "<td>" + (done(r) ? fmt(cadence(r), 1) + ' <span class="unit">f/s</span>' : "—") + "</td>" +
+        "<td>" + (done(r) ? fmt(cad1(r), 1) + ' <span class="unit">' + UNIT + '</span>' : "—") + "</td>" +
         "<td>" + badge(coteSp(r)) + "</td>" +
         '<td><button type="button" class="x" data-id="' + esc(r.id) + '" aria-label="Retirer ' + esc(r.name) + '">×</button></td></tr>';
     }).join("");
@@ -768,7 +814,7 @@ td:last-child { border-radius: 0 14px 14px 0; }
   document.querySelector("#resTable tbody").addEventListener("click", function (e) {
     var b = e.target.closest(".x"); if (!b) return;
     if (b.dataset.armed !== "1") { b.dataset.armed = "1"; b.textContent = "Retirer?"; setTimeout(function () { b.dataset.armed = ""; b.textContent = "×"; }, 3000); return; }
-    store.remove(classCode, b.dataset.id).then(poll, poll);
+    (COURS ? Promise.all([store.remove(classCode, b.dataset.id), store.remove(KEY2, b.dataset.id)]) : store.remove(classCode, b.dataset.id)).then(poll, poll);
   });
   $("revealBtn").addEventListener("click", function () {
     var card = $("dataCard"), open = card.hidden;
@@ -794,7 +840,7 @@ td:last-child { border-radius: 0 14px 14px 0; }
     var self = this;
     if (!armedAll) { armedAll = true; self.textContent = "Touchez encore pour tout effacer"; setTimeout(function () { armedAll = false; self.textContent = "Effacer tous les résultats"; }, 3000); return; }
     armedAll = false; self.textContent = "Effacer tous les résultats";
-    store.clear(classCode).then(poll, poll);
+    (COURS ? Promise.all([store.clear(classCode), store.clear(KEY2)]) : store.clear(classCode)).then(poll, poll);
   });
 
   // ---------- Piste ----------
@@ -881,7 +927,7 @@ td:last-child { border-radius: 0 14px 14px 0; }
       if (!p1 && t >= startEnd) { t = startEnd; drawAt(t); p1 = true; if (bi >= 0) { pause("⭐ Meilleur départ : " + list[bi].name + "! Parti·e " + dep(list[bi]) + " ms après la lumière.", go); return; } }
       if (!p2 && t >= midT) {
         t = midT; drawAt(t); p2 = true;
-        if (fi >= 0) { lanes[fi].el.classList.add("fast"); pause("⚡ Le plus rapide : " + list[fi].name + "! " + fmt(cadence(list[fi]), 1) + " foulées par seconde." + (fi !== bi ? " Ce n'est pas le meilleur départ!" : ""), go); return; }
+        if (fi >= 0) { lanes[fi].el.classList.add("fast"); pause("⚡ Le plus rapide : " + list[fi].name + "! " + fmt(cadence(list[fi]), 1) + " " + (COURS ? "touchers par" : "foulées par") + " seconde." + (fi !== bi ? " Ce n'est pas le meilleur départ!" : ""), go); return; }
       }
       drawAt(t);
       if (t < endT) { raf = requestAnimationFrame(step); return; }
