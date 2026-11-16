@@ -82,13 +82,16 @@ button:focus-visible, input:focus-visible { outline: 4px solid var(--sun); outli
 .mode { font-weight: 800; font-size: .85rem; text-transform: uppercase; letter-spacing: .06em; color: var(--soft); }
 .mode.hot { color: var(--pink); }
 .btns { display: flex; flex-wrap: wrap; gap: 10px; }
-.podium { display: flex; align-items: flex-end; justify-content: center; gap: 10px; margin: 14px 0 6px; }
+.podium { margin: 14px 0 6px; }
+.pods { display: flex; flex-wrap: nowrap; align-items: flex-end; justify-content: center; gap: 10px; }
+.pod-note { text-align: center; font-family: var(--fun); font-weight: 600; font-size: 1.2rem; margin: 14px auto 0; max-width: 560px; background: #fff4c7; border: 3px solid var(--sun); border-radius: 16px; padding: 10px 14px; opacity: 0; animation: podUp .6s ease-out 2s forwards; }
 .podium[hidden] { display: none; }
 .pod { flex: 0 1 150px; text-align: center; opacity: 0; transform: translateY(24px); animation: podUp .6s ease-out forwards; }
 .pod.p1 { animation-delay: 1.2s; } .pod.p2 { animation-delay: .6s; } .pod.p3 { animation-delay: 0s; }
 @keyframes podUp { to { opacity: 1; transform: none; } }
 .pod .who { width: 54px; height: 54px; margin: 0 auto 6px; border-radius: 50%; color: #fff; display: grid; place-items: center; font-family: var(--fun); font-weight: 700; font-size: 1.5rem; border: 4px solid #fff; box-shadow: 0 2px 8px rgba(31,42,72,.3); }
 .pod .nm { font-family: var(--fun); font-weight: 700; font-size: 1.25rem; overflow-wrap: anywhere; }
+.pod .cap { font-weight: 800; font-size: .95rem; line-height: 1.2; margin: 2px 0 4px; text-wrap: balance; }
 .pod .tm { color: var(--soft); font-weight: 700; margin-bottom: 6px; }
 .pod .step { border-radius: 14px 14px 0 0; display: grid; place-items: center; font-family: var(--fun); font-weight: 700; font-size: 2.2rem; color: #fff; }
 .pod.p1 .step { height: 120px; background: var(--sun); color: var(--ink); }
@@ -300,7 +303,7 @@ td:last-child { border-radius: 0 14px 14px 0; }
     <div class="banner" id="banner" hidden role="status"><p id="bannerText"></p><button class="btn-go" type="button" id="contBtn">Continuer</button></div>
     <div class="podium" id="podium" hidden></div>
     <div class="track" id="track"></div>
-    <div class="legend"><span><i style="background:#ffd84d"></i>Meilleur départ</span><span><i style="background:#e9fbf2;box-shadow:inset 0 0 0 3px var(--green)"></i>Plus rapide</span><span>La barre sous chaque coureur : sa vitesse</span></div>
+    <div class="legend"><span><i style="background:#ffd84d"></i>Meilleur départ</span><span><i style="background:#e9fbf2;box-shadow:inset 0 0 0 3px var(--green)"></i>En avance à mi-parcours</span><span>La barre sous chaque coureur : sa vitesse</span></div>
   </div>
 
   <div class="reveal">
@@ -1020,7 +1023,8 @@ td:last-child { border-radius: 0 14px 14px 0; }
       if (!p1 && t >= startEnd) { t = startEnd; drawAt(t); p1 = true; if (bi >= 0) { pause("⭐ Meilleur départ : " + list[bi].name + "! Parti·e " + dep(list[bi]) + " ms après la lumière.", go); return; } }
       if (!p2 && t >= midT) {
         t = midT; drawAt(t); p2 = true;
-        if (fi >= 0) { lanes[fi].el.classList.add("fast"); pause("⚡ Le plus rapide : " + list[fi].name + "! " + fmt(cadence(list[fi]), 1) + " " + (COURS ? "touchers par" : "foulées par") + " seconde." + (fi !== bi ? " Ce n'est pas le meilleur départ!" : ""), go); return; }
+        var li = -1, lp = -1; list.forEach(function (r, i) { var p = posAt(r, midT); if (p > lp) { lp = p; li = i; } });
+        if (li >= 0) { lanes[li].el.classList.add("fast"); pause("🚩 À mi-parcours, c'est " + list[li].name + " qui est en avance!" + (li !== bi ? " Ce n'est pas le meilleur départ!" : ""), go); return; }
       }
       drawAt(t);
       if (t < endT) { raf = requestAnimationFrame(step); return; }
@@ -1040,13 +1044,18 @@ td:last-child { border-radius: 0 14px 14px 0; }
   }
   // Podium des 3 premiers arrivés (tableau de la classe seulement)
   function showPodium(list) {
-    var top = finishOrder.slice(0, 3), slots = [[1, "p2"], [0, "p1"], [2, "p3"]], h = "";
-    slots.forEach(function (sl) {
-      var i = top[sl[0]]; if (i == null) return; var r = list[i];
-      h += '<div class="pod ' + sl[1] + '"><div class="who" style="background:' + color(i) + '">' + esc(r.name.charAt(0).toUpperCase()) + '</div>' +
-        '<div class="nm">' + esc(r.name) + '</div><div class="tm">' + sec(arrival(r)) + '</div><div class="step">' + (sl[0] + 1) + '</div></div>';
+    var top = finishOrder.slice(0, 3), wi = top[0], fi = fastest(), bi = bestStart();
+    var wTxt = (wi === bi && wi === fi) ? "Meilleur départ ET le plus rapide!" : wi === bi ? "Meilleur départ, et assez rapide pour gagner!" : wi === fi ? "Le plus rapide!" : "Ni le meilleur départ, ni le plus rapide, mais la parfaite combinaison des deux!";
+    function cap(i) { if (i === wi) return "🏆 " + wTxt; var c = []; if (i === fi) c.push("⚡ Le plus rapide"); if (i === bi) c.push("⭐ Meilleur départ"); return c.join("<br>"); }
+    var h = "";
+    [[1, "p2"], [0, "p1"], [2, "p3"]].forEach(function (s) {
+      var i = top[s[0]]; if (i == null) return; var r = list[i];
+      h += '<div class="pod ' + s[1] + '"><div class="who" style="background:' + color(i) + '">' + esc(r.name.charAt(0).toUpperCase()) + '</div>' +
+        '<div class="nm">' + esc(r.name) + '</div><div class="cap">' + cap(i) + '</div><div class="tm">' + sec(arrival(r)) + '</div><div class="step">' + (s[0] + 1) + '</div></div>';
     });
-    var p = $("podium"); p.innerHTML = h; p.hidden = false;
+    var note = "";
+    if (bi >= 0 && top.indexOf(bi) < 0) note = "⭐ " + esc(list[bi].name) + " avait le meilleur départ (" + dep(list[bi]) + " ms), mais ça n'a pas été suffisant pour gagner.";
+    var p = $("podium"); p.innerHTML = '<div class="pods">' + h + '</div>' + (note ? '<p class="pod-note">' + note + '</p>' : ""); p.hidden = false;
     try { p.scrollIntoView({ behavior: "smooth", block: "center" }); } catch (e) {}
   }
   $("playBtn").addEventListener("click", function () { sfx.init(); play(false); });
