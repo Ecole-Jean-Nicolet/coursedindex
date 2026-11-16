@@ -68,8 +68,12 @@ button:focus-visible, input:focus-visible { outline: 4px solid var(--sun); outli
 .race-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
 .clock { display: flex; align-items: center; gap: 12px; }
 .clock b { font-family: var(--fun); font-weight: 700; font-size: 2.6rem; line-height: 1; font-variant-numeric: tabular-nums; min-width: 4.4ch; }
-.lamp-s { width: 28px; height: 28px; border-radius: 50%; background: var(--line); flex: none; }
-.lamp-s.on { background: var(--sun); box-shadow: 0 0 18px 6px rgba(255,201,40,.7); }
+.lamp-s { width: 64px; height: 64px; border-radius: 50%; background: #3a2230; border: 5px solid #1f2a48; flex: none; transition: background .05s; }
+.lamp-s.on { background: radial-gradient(circle at 40% 38%, #fff9dc 0%, var(--sun) 50%, #ff9d00 100%); box-shadow: 0 0 30px 14px rgba(255,201,40,.8); }
+.track { position: relative; }
+.track.flash::after { content: ""; position: absolute; inset: 0; border-radius: 18px; pointer-events: none; background: rgba(255,214,60,.55); animation: flashOut 1.4s ease-out forwards; }
+@keyframes flashOut { from { opacity: 1; } to { opacity: 0; } }
+.sound-btn { padding: 12px 16px; }
 .mode { font-weight: 800; font-size: .85rem; text-transform: uppercase; letter-spacing: .06em; color: var(--soft); }
 .mode.hot { color: var(--pink); }
 .btns { display: flex; flex-wrap: wrap; gap: 10px; }
@@ -286,6 +290,7 @@ td:last-child { border-radius: 0 14px 14px 0; }
     <div class="btns">
       <button class="btn-go" type="button" id="playBtn">Lancer la course</button>
       <button type="button" id="realBtn">Vitesse réelle</button>
+      <button type="button" class="sound-btn" id="soundBtn" aria-label="Son">🔊</button>
     </div>
     <div class="banner" id="banner" hidden role="status"><p id="bannerText"></p><button class="btn-go" type="button" id="contBtn">Continuer</button></div>
     <div class="podium" id="podium" hidden></div>
@@ -911,11 +916,72 @@ td:last-child { border-radius: 0 14px 14px 0; }
   function resetRace() {
     finishOrder = [];
     lanes.forEach(function (L) { L.started = false; L.finished = false; L.el.classList.remove("best", "fast"); L.tag.hidden = true; L.rank.textContent = ""; L.rank.classList.remove("gold"); });
-    $("banner").hidden = true; $("podium").hidden = true; drawAt(-1); setMode("Prêts?", false);
+    $("banner").hidden = true; $("podium").hidden = true; $("track").classList.remove("flash"); sfx.stopMusic(); sfx.resume(); drawAt(-1); setMode("Prêts?", false);
   }
+  // ---------- Sons (générés, aucun fichier) ----------
+  var sfx = (function () {
+    var ctx = null, master = null, on = true, music = null;
+    function init() {
+      if (!ctx) { try { ctx = new (window.AudioContext || window.webkitAudioContext)(); master = ctx.createGain(); master.gain.value = .8; master.connect(ctx.destination); } catch (e) { ctx = null; } }
+      if (ctx && ctx.state === "suspended") ctx.resume();
+    }
+    function pow() {
+      if (!ctx || !on) return;
+      var n = ctx.createBuffer(1, ctx.sampleRate * .5, ctx.sampleRate), d = n.getChannelData(0);
+      for (var i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 4);
+      var src = ctx.createBufferSource(); src.buffer = n;
+      var f = ctx.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 2500;
+      var g = ctx.createGain(); g.gain.value = 1.4; src.connect(f); f.connect(g); g.connect(master); src.start();
+      var o = ctx.createOscillator(), og = ctx.createGain(), t = ctx.currentTime;
+      o.frequency.setValueAtTime(140, t); o.frequency.exponentialRampToValueAtTime(40, t + .25);
+      og.gain.setValueAtTime(1, t); og.gain.exponentialRampToValueAtTime(.001, t + .3);
+      o.connect(og); og.connect(master); o.start(t); o.stop(t + .3);
+    }
+    function note(freq, t, dur, type, vol, dest) {
+      var o = ctx.createOscillator(), g = ctx.createGain(); o.type = type; o.frequency.value = freq;
+      g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + dur);
+      o.connect(g); g.connect(dest); o.start(t); o.stop(t + dur + .02);
+    }
+    // Petite mélodie originale entraînante (do majeur, 150 bpm)
+    var MEL = [72,0,76,79, 76,0,72,74, 76,0,79,81, 79,0,76,0, 77,0,81,84, 81,0,77,79, 76,74,72,74, 76,0,0,0];
+    var BAS = [48,55,48,55, 45,52,45,52, 41,48,41,48, 43,50,43,50];
+    function hz(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+    function startMusic() {
+      if (!ctx || !on || music) return;
+      var bus = ctx.createGain(); bus.gain.value = .22; bus.connect(master);
+      var step = 60 / 150 / 2, i = 0, next = ctx.currentTime + .05;
+      music = { bus: bus, timer: setInterval(function () {
+        while (next < ctx.currentTime + .25) {
+          var m = MEL[i % MEL.length]; if (m) note(hz(m), next, step * .9, "square", .5, bus);
+          if (i % 2 === 0) note(hz(BAS[(i / 2) % BAS.length]), next, step * 1.8, "triangle", .9, bus);
+          if (i % 4 === 2) note(2000, next, .03, "square", .15, bus);
+          next += step; i++;
+        }
+      }, 60) };
+    }
+    function stopMusic() {
+      if (!music) return; clearInterval(music.timer);
+      var b = music.bus; try { b.gain.setTargetAtTime(0, ctx.currentTime, .08); setTimeout(function () { b.disconnect(); }, 600); } catch (e) {}
+      music = null;
+    }
+    function fanfare() {
+      if (!ctx || !on) return; var t = ctx.currentTime + .05;
+      [[72, 0], [76, .15], [79, .3], [84, .45]].forEach(function (p) { note(hz(p[0]), t + p[1], p[1] === .45 ? .8 : .18, "square", .2, master); });
+    }
+    function pause() { if (ctx && ctx.state === "running") ctx.suspend(); }
+    function resume() { if (ctx && ctx.state === "suspended") ctx.resume(); }
+    function toggle() { on = !on; if (!on) stopMusic(); return on; }
+    return { init: init, pow: pow, startMusic: startMusic, stopMusic: stopMusic, fanfare: fanfare, pause: pause, resume: resume, toggle: toggle };
+  })();
+  $("soundBtn").addEventListener("click", function () { this.textContent = sfx.toggle() ? "🔊" : "🔇"; });
+  function lightOn() {
+    var tr = $("track"); tr.classList.remove("flash"); void tr.offsetWidth; tr.classList.add("flash");
+    sfx.pow(); sfx.startMusic();
+  }
+
   var raf = 0, resume = null;
-  function pause(text, next) { cancelAnimationFrame(raf); $("bannerText").textContent = text; $("contBtn").hidden = false; $("banner").hidden = false; setMode("Pause", true); resume = next; }
-  $("contBtn").addEventListener("click", function () { $("banner").hidden = true; var f = resume; resume = null; if (f) f(); });
+  function pause(text, next) { cancelAnimationFrame(raf); sfx.pause(); $("bannerText").textContent = text; $("contBtn").hidden = false; $("banner").hidden = false; setMode("Pause", true); resume = next; }
+  $("contBtn").addEventListener("click", function () { sfx.resume(); $("banner").hidden = true; var f = resume; resume = null; if (f) f(); });
   function play(realSpeed) {
     cancelAnimationFrame(raf); if (pendingRender) renderBoard(); resetRace(); resume = null;
     if (!lanes.length) return;
@@ -925,7 +991,8 @@ td:last-child { border-radius: 0 14px 14px 0; }
     var halfs = list.filter(done).map(function (r) { return r.taps[STRIDES / 2 - 1]; });
     var midT = Math.max(startEnd + 200, halfs.length ? Math.min.apply(null, halfs) : startEnd + 200);
     var endT = Math.max.apply(null, list.map(function (r) { return r.taps.length ? r.taps[r.taps.length - 1] : 0; })) + 300;
-    var t = -900, prev = null, p1 = false, p2 = false, bi = bestStart(), fi = fastest();
+    var firstStart = starts.length ? Math.min.apply(null, starts) : 0, slowFrom = Math.max(0, firstStart - 60), slowTo = Math.min(startEnd, firstStart + 110);
+    var t = -400, prev = null, p1 = false, p2 = false, bi = bestStart(), fi = fastest();
     playing = true;
     function go() { prev = null; raf = requestAnimationFrame(step); }
     function step(now) {
@@ -934,9 +1001,12 @@ td:last-child { border-radius: 0 14px 14px 0; }
       var rate;
       if (realSpeed) { rate = 1; setMode("Vitesse réelle", false); }
       else if (t < 0) { rate = .5; setMode("À vos marques…", false); }
-      else if (t < startEnd) { rate = 1 / 10; setMode("Départ au super ralenti", true); }
+      else if (t < slowFrom) { rate = 1 / 3; setMode("La lumière s'allume!", true); }
+      else if (t < slowTo) { rate = 1 / 25; setMode("Départ au super ralenti", true); }
+      else if (t < startEnd) { rate = 1 / 8; setMode("Départ au ralenti", true); }
       else { rate = 1 / 3; setMode("Ralenti", false); }
-      t += dt * rate;
+      var tPrev = t; t += dt * rate;
+      if (tPrev < 0 && t >= 0) lightOn();
       if (!p1 && t >= startEnd) { t = startEnd; drawAt(t); p1 = true; if (bi >= 0) { pause("⭐ Meilleur départ : " + list[bi].name + "! Parti·e " + dep(list[bi]) + " ms après la lumière.", go); return; } }
       if (!p2 && t >= midT) {
         t = midT; drawAt(t); p2 = true;
@@ -944,7 +1014,7 @@ td:last-child { border-radius: 0 14px 14px 0; }
       }
       drawAt(t);
       if (t < endT) { raf = requestAnimationFrame(step); return; }
-      setMode("Arrivée!", false); playing = false;
+      setMode("Arrivée!", false); playing = false; sfx.stopMusic(); if (finishOrder.length) sfx.fanfare();
       if (finishOrder.length) {
         var wi = finishOrder[0], w = list[wi], txt = "🏆 " + w.name + " gagne la course! ";
         if (wi === bi && wi === fi) txt += "Meilleur départ et plus rapide.";
@@ -969,8 +1039,8 @@ td:last-child { border-radius: 0 14px 14px 0; }
     var p = $("podium"); p.innerHTML = h; p.hidden = false;
     try { p.scrollIntoView({ behavior: "smooth", block: "center" }); } catch (e) {}
   }
-  $("playBtn").addEventListener("click", function () { play(false); });
-  $("realBtn").addEventListener("click", function () { play(true); });
+  $("playBtn").addEventListener("click", function () { sfx.init(); play(false); });
+  $("realBtn").addEventListener("click", function () { sfx.init(); play(true); });
 
   // Démarrage (à la fin, une fois tout le reste prêt)
   if (!PREVIEW && new URLSearchParams(location.search).has("eleve")) startStudent(CLASS_KEY);
