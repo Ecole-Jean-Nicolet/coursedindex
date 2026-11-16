@@ -991,10 +991,32 @@ td:last-child { border-radius: 0 14px 14px 0; }
       if (!ctx || !on) return; var t = ctx.currentTime + .05;
       [[72, 0], [76, .15], [79, .3], [84, .45]].forEach(function (p) { note(hz(p[0]), t + p[1], p[1] === .45 ? .8 : .18, "square", .2, master); });
     }
-    function pause() { if (ctx && ctx.state === "running") ctx.suspend(); }
-    function resume() { if (ctx && ctx.state === "suspended") ctx.resume(); }
-    function toggle() { on = !on; if (!on) stopMusic(); return on; }
-    return { init: init, pow: pow, startMusic: startMusic, stopMusic: stopMusic, fanfare: fanfare, pause: pause, resume: resume, toggle: toggle };
+    // Petit beat doux pendant les pauses (la course reprend ensuite sa musique)
+    var idle = null;
+    function startIdle() {
+      if (!ctx || !on || idle) return;
+      var bus = ctx.createGain(), t0 = ctx.currentTime; bus.gain.setValueAtTime(0, t0); bus.gain.linearRampToValueAtTime(.2, t0 + .4); bus.connect(master);
+      var step = 60 / 100 / 2, i = 0, next = t0 + .05, BASS = [45, 45, 41, 43];
+      idle = { bus: bus, timer: setInterval(function () {
+        while (next < ctx.currentTime + .2) {
+          if (i % 4 === 0) kick(next, bus);
+          if (i % 2 === 1) hat(next, bus);
+          if (i % 8 === 0) note(hz(BASS[(i / 8) % 4]), next, step * 3, "triangle", .8, bus);
+          if (i % 8 === 6) note(hz(BASS[(i / 8 | 0) % 4] + 24), next, step * .8, "square", .12, bus);
+          next += step; i++;
+        }
+      }, 40) };
+    }
+    function stopIdle() {
+      if (!idle) return; clearInterval(idle.timer);
+      var b = idle.bus; try { b.gain.setTargetAtTime(0, ctx.currentTime, .05); setTimeout(function () { b.disconnect(); }, 500); } catch (e) {}
+      idle = null;
+    }
+    function pause() { if (!ctx) return; var wasOn = !!music; stopMusic(); if (wasOn) startIdle(); }
+    function unpause() { if (!idle) return; stopIdle(); startMusic(); }
+    function resume() { if (ctx && ctx.state === "suspended") ctx.resume(); stopIdle(); }
+    function toggle() { on = !on; if (!on) { stopMusic(); stopIdle(); } return on; }
+    return { init: init, pow: pow, startMusic: startMusic, stopMusic: function () { stopMusic(); stopIdle(); }, fanfare: fanfare, pause: pause, unpause: unpause, resume: resume, toggle: toggle };
   })();
   ["touchend", "click"].forEach(function (ev) { document.addEventListener(ev, function () { sfx.init(); }, { once: true, passive: true }); });
   $("soundBtn").addEventListener("click", function () { this.textContent = sfx.toggle() ? "🔊" : "🔇"; });
@@ -1005,7 +1027,7 @@ td:last-child { border-radius: 0 14px 14px 0; }
 
   var raf = 0, resume = null;
   function pause(text, next) { cancelAnimationFrame(raf); sfx.pause(); $("bannerText").textContent = text; $("contBtn").hidden = false; $("banner").hidden = false; setMode("Pause", true); resume = next; }
-  $("contBtn").addEventListener("click", function () { sfx.resume(); $("banner").hidden = true; var f = resume; resume = null; if (f) f(); });
+  $("contBtn").addEventListener("click", function () { sfx.unpause(); $("banner").hidden = true; var f = resume; resume = null; if (f) f(); });
   function play(realSpeed) {
     cancelAnimationFrame(raf); if (pendingRender) renderBoard(); resetRace(); resume = null;
     if (!lanes.length) return;
