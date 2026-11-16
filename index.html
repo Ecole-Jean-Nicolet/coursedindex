@@ -73,6 +73,18 @@ button:focus-visible, input:focus-visible { outline: 4px solid var(--sun); outli
 .mode { font-weight: 800; font-size: .85rem; text-transform: uppercase; letter-spacing: .06em; color: var(--soft); }
 .mode.hot { color: var(--pink); }
 .btns { display: flex; flex-wrap: wrap; gap: 10px; }
+.podium { display: flex; align-items: flex-end; justify-content: center; gap: 10px; margin: 14px 0 6px; }
+.podium[hidden] { display: none; }
+.pod { flex: 0 1 150px; text-align: center; opacity: 0; transform: translateY(24px); animation: podUp .6s ease-out forwards; }
+.pod.p1 { animation-delay: 1.2s; } .pod.p2 { animation-delay: .6s; } .pod.p3 { animation-delay: 0s; }
+@keyframes podUp { to { opacity: 1; transform: none; } }
+.pod .who { width: 54px; height: 54px; margin: 0 auto 6px; border-radius: 50%; color: #fff; display: grid; place-items: center; font-family: var(--fun); font-weight: 700; font-size: 1.5rem; border: 4px solid #fff; box-shadow: 0 2px 8px rgba(31,42,72,.3); }
+.pod .nm { font-family: var(--fun); font-weight: 700; font-size: 1.25rem; overflow-wrap: anywhere; }
+.pod .tm { color: var(--soft); font-weight: 700; margin-bottom: 6px; }
+.pod .step { border-radius: 14px 14px 0 0; display: grid; place-items: center; font-family: var(--fun); font-weight: 700; font-size: 2.2rem; color: #fff; }
+.pod.p1 .step { height: 120px; background: var(--sun); color: var(--ink); }
+.pod.p2 .step { height: 85px; background: #b8c2d6; }
+.pod.p3 .step { height: 60px; background: #d9965b; }
 .banner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; background: #fff4c7; border: 3px solid var(--sun); border-radius: 18px; padding: 14px 18px; }
 .banner p { font-family: var(--fun); font-weight: 600; font-size: 1.35rem; }
 .track { border-radius: 18px; overflow: hidden; border: 3px solid var(--line); }
@@ -262,7 +274,7 @@ td:last-child { border-radius: 0 14px 14px 0; }
       <p><span class="count" id="count">0</span> <span class="soft">coureurs arrivés</span> <span class="err" id="netErr" hidden>· connexion impossible, nouvel essai…</span></p>
       <div class="chips" id="chips"></div>
       <div><button class="btn-blue" type="button" id="runHere">Faire courir quelqu'un ici</button></div>
-      <div class="btns" id="raceLinks" hidden><a class="linkbtn" href="classe-vs-collegues.html" target="_blank" rel="noopener">Classe contre collègues</a></div>
+      <div class="btns" id="raceLinks" hidden><a class="linkbtn" href="course-combinee.html" target="_blank" rel="noopener">Course des collègues</a><a class="linkbtn" href="classe-vs-collegues.html" target="_blank" rel="noopener">Classe contre collègues</a></div>
     </div>
   </div>
 
@@ -276,6 +288,7 @@ td:last-child { border-radius: 0 14px 14px 0; }
       <button type="button" id="realBtn">Vitesse réelle</button>
     </div>
     <div class="banner" id="banner" hidden role="status"><p id="bannerText"></p><button class="btn-go" type="button" id="contBtn">Continuer</button></div>
+    <div class="podium" id="podium" hidden></div>
     <div class="track" id="track"></div>
     <div class="legend"><span><i style="background:#ffd84d"></i>Meilleur départ</span><span><i style="background:#e9fbf2;box-shadow:inset 0 0 0 3px var(--green)"></i>Plus rapide</span><span>La barre sous chaque coureur : sa vitesse</span></div>
   </div>
@@ -898,7 +911,7 @@ td:last-child { border-radius: 0 14px 14px 0; }
   function resetRace() {
     finishOrder = [];
     lanes.forEach(function (L) { L.started = false; L.finished = false; L.el.classList.remove("best", "fast"); L.tag.hidden = true; L.rank.textContent = ""; L.rank.classList.remove("gold"); });
-    $("banner").hidden = true; drawAt(-1); setMode("Prêts?", false);
+    $("banner").hidden = true; $("podium").hidden = true; drawAt(-1); setMode("Prêts?", false);
   }
   var raf = 0, resume = null;
   function pause(text, next) { cancelAnimationFrame(raf); $("bannerText").textContent = text; $("contBtn").hidden = false; $("banner").hidden = false; setMode("Pause", true); resume = next; }
@@ -939,10 +952,22 @@ td:last-child { border-radius: 0 14px 14px 0; }
         else if (wi === fi) txt += "Le plus rapide, mais pas le meilleur départ.";
         else txt += "Ni le meilleur départ, ni le plus rapide!";
         $("bannerText").textContent = txt; $("contBtn").hidden = true; $("banner").hidden = false;
+        if (!COURS) showPodium(list);
       }
       if (pendingRender) setTimeout(function () { if (!playing) renderBoard(); }, 5000);
     }
     go();
+  }
+  // Podium des 3 premiers arrivés (tableau de la classe seulement)
+  function showPodium(list) {
+    var top = finishOrder.slice(0, 3), slots = [[1, "p2"], [0, "p1"], [2, "p3"]], h = "";
+    slots.forEach(function (sl) {
+      var i = top[sl[0]]; if (i == null) return; var r = list[i];
+      h += '<div class="pod ' + sl[1] + '"><div class="who" style="background:' + color(i) + '">' + esc(r.name.charAt(0).toUpperCase()) + '</div>' +
+        '<div class="nm">' + esc(r.name) + '</div><div class="tm">' + sec(arrival(r)) + '</div><div class="step">' + (sl[0] + 1) + '</div></div>';
+    });
+    var p = $("podium"); p.innerHTML = h; p.hidden = false;
+    try { p.scrollIntoView({ behavior: "smooth", block: "center" }); } catch (e) {}
   }
   $("playBtn").addEventListener("click", function () { play(false); });
   $("realBtn").addEventListener("click", function () { play(true); });
