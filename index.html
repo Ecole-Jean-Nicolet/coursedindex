@@ -917,7 +917,7 @@ td:last-child { border-radius: 0 14px 14px 0; }
       var s = speedAt(L.r, t);
       if (s != null) { L.bar.style.width = Math.min(100, s / 10 * 75) + "%"; L.num.textContent = fmt(s, 1); } else { L.bar.style.width = "0"; L.num.textContent = ""; }
       var arr = arrival(L.r);
-      if (arr != null && t >= arr && !L.finished) { L.finished = true; finishOrder.push(i); L.rank.textContent = finishOrder.length + (finishOrder.length === 1 ? "er" : "e"); L.rank.classList.toggle("gold", finishOrder.length === 1); L.tag.textContent = sec(arr); }
+      if (arr != null && t >= arr && !L.finished) { L.finished = true; finishOrder.push(i); L.rank.textContent = finishOrder.length + (finishOrder.length === 1 ? "er" : "e"); L.rank.classList.toggle("gold", finishOrder.length <= 3); L.tag.textContent = sec(arr); }
     });
   }
   function setMode(txt, hot) { var m = $("mode"); m.textContent = txt; m.classList.toggle("hot", !!hot); }
@@ -954,22 +954,33 @@ td:last-child { border-radius: 0 14px 14px 0; }
       g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + dur);
       o.connect(g); g.connect(dest); o.start(t); o.stop(t + dur + .02);
     }
-    // Petite mélodie originale entraînante (do majeur, 150 bpm)
-    var MEL = [72,0,76,79, 76,0,72,74, 76,0,79,81, 79,0,76,0, 77,0,81,84, 81,0,77,79, 76,74,72,74, 76,0,0,0];
-    var BAS = [48,55,48,55, 45,52,45,52, 41,48,41,48, 43,50,43,50];
+    // Musique de course originale, rapide (la mineur, 172 bpm, doubles croches)
+    var MEL = [69,72,76,72, 81,76,72,76, 69,72,76,72, 81,0,79,0,
+               65,69,72,69, 77,72,69,72, 65,69,72,69, 77,0,76,0,
+               67,71,74,71, 79,74,71,74, 67,71,74,71, 79,0,81,0,
+               68,71,76,71, 80,76,71,76, 83,0,81,0, 80,0,76,0];
+    var ROOT = [45, 41, 43, 40]; // la, fa, sol, mi
     function hz(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+    function kick(t, dest) { var o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.setValueAtTime(130, t); o.frequency.exponentialRampToValueAtTime(45, t + .12); g.gain.setValueAtTime(1, t); g.gain.exponentialRampToValueAtTime(.001, t + .15); o.connect(g); g.connect(dest); o.start(t); o.stop(t + .16); }
+    var hatBuf = null;
+    function hat(t, dest) {
+      if (!hatBuf) { hatBuf = ctx.createBuffer(1, ctx.sampleRate * .05, ctx.sampleRate); var d = hatBuf.getChannelData(0); for (var k = 0; k < d.length; k++) d[k] = (Math.random() * 2 - 1) * (1 - k / d.length); }
+      var s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain(); s.buffer = hatBuf; f.type = "highpass"; f.frequency.value = 7000; g.gain.value = .35; s.connect(f); f.connect(g); g.connect(dest); s.start(t);
+    }
     function startMusic() {
       if (!ctx || !on || music) return;
       var bus = ctx.createGain(); bus.gain.value = .22; bus.connect(master);
-      var step = 60 / 150 / 2, i = 0, next = ctx.currentTime + .05;
+      var step = 60 / 172 / 4, i = 0, next = ctx.currentTime + .05;
       music = { bus: bus, timer: setInterval(function () {
-        while (next < ctx.currentTime + .25) {
-          var m = MEL[i % MEL.length]; if (m) note(hz(m), next, step * .9, "square", .5, bus);
-          if (i % 2 === 0) note(hz(BAS[(i / 2) % BAS.length]), next, step * 1.8, "triangle", .9, bus);
-          if (i % 4 === 2) note(2000, next, .03, "square", .15, bus);
+        while (next < ctx.currentTime + .2) {
+          var m = MEL[i % MEL.length], bar = Math.floor(i / 16) % 4;
+          if (m) note(hz(m), next, step * .85, "square", .32, bus);
+          if (i % 2 === 0) note(hz(ROOT[bar] + (i % 4 === 2 ? 12 : 0)), next, step * 1.7, "sawtooth", .35, bus);
+          if (i % 4 === 0) kick(next, bus);
+          if (i % 4 === 2) hat(next, bus);
           next += step; i++;
         }
-      }, 60) };
+      }, 40) };
     }
     function stopMusic() {
       if (!music) return; clearInterval(music.timer);
@@ -1024,7 +1035,7 @@ td:last-child { border-radius: 0 14px 14px 0; }
       if (!p2 && t >= midT) {
         t = midT; drawAt(t); p2 = true;
         var li = -1, lp = -1; list.forEach(function (r, i) { var p = posAt(r, midT); if (p > lp) { lp = p; li = i; } });
-        if (li >= 0) { lanes[li].el.classList.add("fast"); pause("🚩 À mi-parcours, c'est " + list[li].name + " qui est en avance!" + (li !== bi ? " Ce n'est pas le meilleur départ!" : ""), go); return; }
+        if (li >= 0) { lanes[li].el.classList.add("fast"); pause("🚩 À mi-parcours, c'est " + list[li].name + " qui est en avance!" + (li !== bi ? " Ce n'est pas le meilleur départ!" : ""), function () { lanes[li].el.classList.remove("fast"); go(); }); return; }
       }
       drawAt(t);
       if (t < endT) { raf = requestAnimationFrame(step); return; }
