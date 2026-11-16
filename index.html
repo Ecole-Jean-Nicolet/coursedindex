@@ -71,6 +71,11 @@ button:focus-visible, input:focus-visible { outline: 4px solid var(--sun); outli
 .lamp-s { width: 64px; height: 64px; border-radius: 50%; background: #3a2230; border: 5px solid #1f2a48; flex: none; transition: background .05s; }
 .lamp-s.on { background: radial-gradient(circle at 40% 38%, #fff9dc 0%, var(--sun) 50%, #ff9d00 100%); box-shadow: 0 0 30px 14px rgba(255,201,40,.8); }
 .track { position: relative; }
+.lane.go { animation: laneGo .9s ease-out; }
+@keyframes laneGo { 0% { background: #fff1a8; } 100% { background: transparent; } }
+.lane.go .lane-no { animation: noPop .6s ease-out; }
+@keyframes noPop { 0% { transform: scale(1); } 35% { transform: scale(1.6); } 100% { transform: scale(1); } }
+.tag:not([hidden]) { font-weight: 800; }
 .track.flash::after { content: ""; position: absolute; inset: 0; border-radius: 18px; pointer-events: none; background: rgba(255,214,60,.55); animation: flashOut 1.4s ease-out forwards; }
 @keyframes flashOut { from { opacity: 1; } to { opacity: 0; } }
 .sound-btn { padding: 12px 16px; }
@@ -905,7 +910,7 @@ td:last-child { border-radius: 0 14px 14px 0; }
     lanes.forEach(function (L, i) {
       L.run.style.transform = "translateX(" + Math.round(posAt(L.r, t) * L.w) + "px)";
       var first = rt(L.r);
-      if (first != null && t >= first && !L.started) { L.started = true; L.tag.textContent = dep(L.r) + " ms"; L.tag.hidden = false; if (i === best) L.el.classList.add("best"); }
+      if (first != null && t >= first && !L.started) { L.started = true; if (t < 2000) { L.el.classList.remove("go"); void L.el.offsetWidth; L.el.classList.add("go"); } L.tag.textContent = dep(L.r) + " ms"; L.tag.hidden = false; if (i === best) L.el.classList.add("best"); }
       var s = speedAt(L.r, t);
       if (s != null) { L.bar.style.width = Math.min(100, s / 10 * 75) + "%"; L.num.textContent = fmt(s, 1); } else { L.bar.style.width = "0"; L.num.textContent = ""; }
       var arr = arrival(L.r);
@@ -915,15 +920,19 @@ td:last-child { border-radius: 0 14px 14px 0; }
   function setMode(txt, hot) { var m = $("mode"); m.textContent = txt; m.classList.toggle("hot", !!hot); }
   function resetRace() {
     finishOrder = [];
-    lanes.forEach(function (L) { L.started = false; L.finished = false; L.el.classList.remove("best", "fast"); L.tag.hidden = true; L.rank.textContent = ""; L.rank.classList.remove("gold"); });
+    lanes.forEach(function (L) { L.started = false; L.finished = false; L.el.classList.remove("best", "fast", "go"); L.tag.hidden = true; L.rank.textContent = ""; L.rank.classList.remove("gold"); });
     $("banner").hidden = true; $("podium").hidden = true; $("track").classList.remove("flash"); sfx.stopMusic(); sfx.resume(); drawAt(-1); setMode("Prêts?", false);
   }
   // ---------- Sons (générés, aucun fichier) ----------
   var sfx = (function () {
-    var ctx = null, master = null, on = true, music = null;
+    var ctx = null, master = null, on = true, music = null, unlocked = false, keep = null;
     function init() {
+      try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch (e) {}
       if (!ctx) { try { ctx = new (window.AudioContext || window.webkitAudioContext)(); master = ctx.createGain(); master.gain.value = .8; master.connect(ctx.destination); } catch (e) { ctx = null; } }
       if (ctx && ctx.state === "suspended") ctx.resume();
+      if (ctx && !unlocked) { try { var b = ctx.createBuffer(1, 1, 22050), s = ctx.createBufferSource(); s.buffer = b; s.connect(ctx.destination); s.start(0); unlocked = true; } catch (e) {} }
+      // Fichier audio silencieux : fait passer le son même si le bouton silence de l'iPad est activé
+      if (!keep) { try { keep = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA="); keep.loop = true; keep.play().catch(function () {}); } catch (e) {} }
     }
     function pow() {
       if (!ctx || !on) return;
@@ -973,6 +982,7 @@ td:last-child { border-radius: 0 14px 14px 0; }
     function toggle() { on = !on; if (!on) stopMusic(); return on; }
     return { init: init, pow: pow, startMusic: startMusic, stopMusic: stopMusic, fanfare: fanfare, pause: pause, resume: resume, toggle: toggle };
   })();
+  ["touchend", "click"].forEach(function (ev) { document.addEventListener(ev, function () { sfx.init(); }, { once: true, passive: true }); });
   $("soundBtn").addEventListener("click", function () { this.textContent = sfx.toggle() ? "🔊" : "🔇"; });
   function lightOn() {
     var tr = $("track"); tr.classList.remove("flash"); void tr.offsetWidth; tr.classList.add("flash");
@@ -991,7 +1001,7 @@ td:last-child { border-radius: 0 14px 14px 0; }
     var halfs = list.filter(done).map(function (r) { return r.taps[STRIDES / 2 - 1]; });
     var midT = Math.max(startEnd + 200, halfs.length ? Math.min.apply(null, halfs) : startEnd + 200);
     var endT = Math.max.apply(null, list.map(function (r) { return r.taps.length ? r.taps[r.taps.length - 1] : 0; })) + 300;
-    var firstStart = starts.length ? Math.min.apply(null, starts) : 0, slowFrom = Math.max(0, firstStart - 60), slowTo = Math.min(startEnd, firstStart + 110);
+    var firstStart = starts.length ? Math.min.apply(null, starts) : 0, slowFrom = Math.max(0, firstStart - 20), slowTo = Math.min(startEnd, firstStart + 110);
     var t = -400, prev = null, p1 = false, p2 = false, bi = bestStart(), fi = fastest();
     playing = true;
     function go() { prev = null; raf = requestAnimationFrame(step); }
@@ -1002,7 +1012,7 @@ td:last-child { border-radius: 0 14px 14px 0; }
       if (realSpeed) { rate = 1; setMode("Vitesse réelle", false); }
       else if (t < 0) { rate = .5; setMode("À vos marques…", false); }
       else if (t < slowFrom) { rate = 1 / 3; setMode("La lumière s'allume!", true); }
-      else if (t < slowTo) { rate = 1 / 25; setMode("Départ au super ralenti", true); }
+      else if (t < slowTo) { rate = 1 / 40; setMode("Départ au super ralenti", true); }
       else if (t < startEnd) { rate = 1 / 8; setMode("Départ au ralenti", true); }
       else { rate = 1 / 3; setMode("Ralenti", false); }
       var tPrev = t; t += dt * rate;
